@@ -48,6 +48,21 @@ func main() {
 		handleUploadObject(c, bucket, object)
 	})
 
+	r.GET("/:bucket/*object", func(c *gin.Context) {
+		bucket := c.Param("bucket")
+		object := c.Param("object")
+
+		path := filepath.Join("uploads", bucket, object)
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			respondS3Error(c, http.StatusConflict, "ObjectNotFound",
+				"Object not found.",
+				bucket)
+			return
+		}
+
+		c.File(path)
+	})
+
 	if err := r.Run(":8080"); err != nil {
 		return
 	}
