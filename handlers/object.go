@@ -9,20 +9,23 @@ import (
 	"path/filepath"
 )
 
+// PutObjectOrBucket receives the endpoint of creating an object or a bucket (due to gin problem with * endpoints).
 func (h *Handler) PutObjectOrBucket(c *gin.Context) {
 	bucket := c.Param("bucket")
 	object := c.Param("object")
 
 	if object == "/" || object == "" {
-		h.handleCreateBucket(c, bucket)
+		h.HandleCreateBucket(c, bucket)
 		return
 	}
 
 	object = object[1:]
-	h.handleUploadObject(c, bucket, object)
+	h.HandlePutObject(c, bucket, object)
 }
 
-func (h *Handler) handleUploadObject(c *gin.Context, bucket, object string) {
+// HandlePutObject receives the bucket name, the object key and the object and persists it.
+// AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
+func (h *Handler) HandlePutObject(c *gin.Context, bucket, object string) {
 	dst := filepath.Join("uploads", bucket, object)
 	if err := os.MkdirAll(filepath.Dir(dst), os.ModePerm); err != nil {
 		utils.RespondS3Error(c, http.StatusInternalServerError, "InternalError",
@@ -54,13 +57,15 @@ func (h *Handler) handleUploadObject(c *gin.Context, bucket, object string) {
 	c.Status(http.StatusOK)
 }
 
+// GetObject gets the bucket and the file key and returns the file.
+// AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html
 func (h *Handler) GetObject(c *gin.Context) {
 	bucket := c.Param("bucket")
 	object := c.Param("object")
 
 	path := filepath.Join("uploads", bucket, object)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		utils.RespondS3Error(c, http.StatusConflict, "ObjectNotFound",
+		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchKey",
 			"Object not found.", bucket)
 		return
 	}

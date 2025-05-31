@@ -9,6 +9,9 @@ import (
 	"time"
 )
 
+// ListBuckets returns a list of all buckets stored in memory.
+// Each bucket contains its name and creation timestamp.
+// AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBuckets.html
 func (h *Handler) ListBuckets(c *gin.Context) {
 	buckets := h.Store.ListBuckets()
 	var xmlBuckets []encoding.BucketXML
@@ -25,7 +28,9 @@ func (h *Handler) ListBuckets(c *gin.Context) {
 	c.XML(http.StatusOK, res)
 }
 
-func (h *Handler) handleCreateBucket(c *gin.Context, bucket string) {
+// HandleCreateBucket receives the name of the new bucket and creates the bucket.
+// AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html
+func (h *Handler) HandleCreateBucket(c *gin.Context, bucket string) {
 	if err := h.Store.CreateBucket(bucket); err != nil {
 		utils.RespondS3Error(c, http.StatusConflict, "BucketAlreadyExists",
 			"The requested bucket name is not available.", bucket)
