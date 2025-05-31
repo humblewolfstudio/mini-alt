@@ -85,7 +85,13 @@ func handleUploadObject(c *gin.Context, bucket, object string) {
 			"Could not create file.", bucket)
 		return
 	}
-	defer file.Close()
+
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+
+		}
+	}(file)
 
 	written, err := io.Copy(file, c.Request.Body)
 	if err != nil {
