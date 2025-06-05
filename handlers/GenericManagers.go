@@ -23,7 +23,7 @@ func (h *Handler) PutObjectOrBucket(c *gin.Context) {
 	object := c.Param("object")
 
 	if object == "/" || object == "" {
-		h.HandleCreateBucket(c, bucket)
+		h.CreateBucket(c, bucket)
 		return
 	}
 
