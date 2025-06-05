@@ -69,3 +69,10 @@ func (s *InMemoryStore) PutObject(bucket, key string, size int64) {
 	}
 	s.buckets[bucket] = append(s.buckets[bucket], obj)
 }
+
+func (s *InMemoryStore) ListObjects(bucket string) []Object {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return s.buckets[bucket]
+}
