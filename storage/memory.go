@@ -24,13 +24,13 @@ type Bucket struct {
 
 type InMemoryStore struct {
 	mu      sync.Mutex
-	buckets map[string][]Object
+	buckets map[string]map[string]Object
 	meta    map[string]Bucket
 }
 
 func NewInMemoryStore() *InMemoryStore {
 	return &InMemoryStore{
-		buckets: make(map[string][]Object),
+		buckets: make(map[string]map[string]Object),
 		meta:    make(map[string]Bucket),
 	}
 }
@@ -42,7 +42,7 @@ func (s *InMemoryStore) CreateBucket(name string) error {
 	if _, exists := s.buckets[name]; exists {
 		return errors.New("bucket already exists")
 	}
-	s.buckets[name] = make([]Object, 0)
+	s.buckets[name] = make(map[string]Object)
 	s.meta[name] = Bucket{Name: name, CreatedAt: time.Now()}
 	return nil
 }
@@ -58,21 +58,39 @@ func (s *InMemoryStore) ListBuckets() []Bucket {
 	return buckets
 }
 
-func (s *InMemoryStore) PutObject(bucket, key string, size int64) {
+func (s *InMemoryStore) PutObject(bucket, objectKey string, size int64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	obj := Object{
-		ObjectKey:    key,
+		ObjectKey:    objectKey,
 		Size:         size,
 		LastModified: time.Now(),
 	}
-	s.buckets[bucket] = append(s.buckets[bucket], obj)
+	s.buckets[bucket][objectKey] = obj
 }
 
 func (s *InMemoryStore) ListObjects(bucket string) []Object {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return s.buckets[bucket]
+	bucketObjects, exists := s.buckets[bucket]
+	if !exists {
+		return nil
+	}
+
+	objects := make([]Object, 0, len(bucketObjects))
+	for _, obj := range bucketObjects {
+		objects = append(objects, obj)
+	}
+	return objects
+}
+
+func (s *InMemoryStore) DeleteObject(bucket, objectKey string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if bucketObjects, ok := s.buckets[bucket]; ok {
+		delete(bucketObjects, objectKey)
+	}
 }
