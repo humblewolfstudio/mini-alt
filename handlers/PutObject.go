@@ -9,23 +9,9 @@ import (
 	"path/filepath"
 )
 
-// PutObjectOrBucket receives the endpoint of creating an object or a bucket (due to gin problem with * endpoints).
-func (h *Handler) PutObjectOrBucket(c *gin.Context) {
-	bucket := c.Param("bucket")
-	object := c.Param("object")
-
-	if object == "/" || object == "" {
-		h.HandleCreateBucket(c, bucket)
-		return
-	}
-
-	object = object[1:]
-	h.HandlePutObject(c, bucket, object)
-}
-
-// HandlePutObject receives the bucket name, the object key and the object and persists it.
+// PutObject receives the bucket name, the object key and the object and persists it.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
-func (h *Handler) HandlePutObject(c *gin.Context, bucket, object string) {
+func (h *Handler) PutObject(c *gin.Context, bucket, object string) {
 	dst := filepath.Join("uploads", bucket, object)
 	if err := os.MkdirAll(filepath.Dir(dst), os.ModePerm); err != nil {
 		utils.RespondS3Error(c, http.StatusInternalServerError, "InternalError",
