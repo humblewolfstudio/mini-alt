@@ -58,7 +58,7 @@ func (s *InMemoryStore) ListBuckets() []Bucket {
 	return buckets
 }
 
-func (s *InMemoryStore) PutObject(bucket, objectKey string, size int64) {
+func (s *InMemoryStore) PutObject(bucket, objectKey string, size int64) Object {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -68,6 +68,8 @@ func (s *InMemoryStore) PutObject(bucket, objectKey string, size int64) {
 		LastModified: time.Now(),
 	}
 	s.buckets[bucket][objectKey] = obj
+
+	return obj
 }
 
 func (s *InMemoryStore) ListObjects(bucket string) []Object {

@@ -22,6 +22,11 @@ func (h *Handler) PutObjectOrBucket(c *gin.Context) {
 	bucket := c.Param("bucket")
 	object := c.Param("object")
 
+	if copySource := c.GetHeader("x-amz-copy-source"); copySource != "" {
+		h.CopyObject(c, bucket, object, copySource)
+		return
+	}
+
 	if object == "/" || object == "" {
 		h.CreateBucket(c, bucket)
 		return

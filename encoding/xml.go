@@ -43,3 +43,8 @@ type Content struct {
 	LastModified time.Time `xml:"LastModified"`
 	Size         int64     `xml:"Size"`
 }
+
+type CopyObjectResult struct {
+	XMLName      xml.Name  `xml:"CopyObjectResult"`
+	LastModified time.Time `xml:"LastModified"`
+}

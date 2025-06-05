@@ -46,11 +46,20 @@ func CreateObject(path string, src io.Reader) (int64, error) {
 	return written, nil
 }
 
-func GetObject(bucketName, objectKey string) (string, error) {
+func GetObjectPath(bucketName, objectKey string) (string, error) {
 	path := filepath.Join("uploads", bucketName, objectKey)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return "", err
 	}
 
 	return path, nil
+}
+
+func GetObject(bucketName, objectKey string) (io.ReadWriter, error) {
+	path, err := GetObjectPath(bucketName, objectKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return os.Open(path)
 }
