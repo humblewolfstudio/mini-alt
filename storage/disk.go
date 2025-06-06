@@ -20,12 +20,13 @@ func DeleteObjectFile(bucketName, objectKey string) {
 }
 
 func CreateObjectFilePath(bucketName, objectKey string) (string, error) {
-	path := filepath.Join("uploads", bucketName, objectKey)
-	if err := os.MkdirAll(path, os.ModePerm); err != nil {
+	fullPath := filepath.Join("uploads", bucketName, objectKey)
+	dir := filepath.Dir(fullPath)
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		return "", err
 	}
 
-	return path, nil
+	return fullPath, nil
 }
 
 func CreateObject(path string, src io.Reader) (int64, error) {
@@ -49,7 +50,7 @@ func CreateObject(path string, src io.Reader) (int64, error) {
 func GetObjectPath(bucketName, objectKey string) (string, error) {
 	path := filepath.Join("uploads", bucketName, objectKey)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return "", err
+		return path, err
 	}
 
 	return path, nil

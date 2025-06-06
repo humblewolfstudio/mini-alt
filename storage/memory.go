@@ -67,6 +67,11 @@ func (s *InMemoryStore) PutObject(bucket, objectKey string, size int64) Object {
 		Size:         size,
 		LastModified: time.Now(),
 	}
+
+	if s.buckets[bucket] == nil {
+		s.buckets[bucket] = make(map[string]Object)
+	}
+
 	s.buckets[bucket][objectKey] = obj
 
 	return obj

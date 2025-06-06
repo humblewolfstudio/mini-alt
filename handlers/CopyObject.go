@@ -26,9 +26,6 @@ func (h *Handler) CopyObject(c *gin.Context, bucketName, objectKey, copySource s
 	}
 
 	endPath, err := storage.GetObjectPath(bucketName, objectKey)
-	if err != nil {
-		utils.RespondS3Error(c, http.StatusNotFound, "ObjectNotFound", "Could not find the Object.", bucketName)
-	}
 
 	written, err := storage.CreateObject(endPath, srcFile)
 	if err != nil {
