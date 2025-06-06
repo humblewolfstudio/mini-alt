@@ -58,7 +58,9 @@ func TestGetObject(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetObject failed: %v", err)
 	}
-	defer result.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(result.Body)
 
 	body := make([]byte, 100)
 	n, err := result.Body.Read(body)
