@@ -6,4 +6,5 @@ type Store interface {
 	PutObject(bucket, object string, size int64) Object
 	ListObjects(bucket string) []Object
 	DeleteObject(bucket, objectKey string)
+	DeleteBucket(bucket string)
 }

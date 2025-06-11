@@ -101,3 +101,10 @@ func (s *InMemoryStore) DeleteObject(bucket, objectKey string) {
 		delete(bucketObjects, objectKey)
 	}
 }
+
+func (s *InMemoryStore) DeleteBucket(bucketName string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	delete(s.buckets, bucketName)
+}

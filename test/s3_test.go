@@ -146,3 +146,41 @@ func TestListObjects(t *testing.T) {
 		t.Error("Expected object not found in listing")
 	}
 }
+
+func TestDeleteBucket(t *testing.T) {
+	s3Client := createTestClient()
+
+	bucketName := "test-bucket"
+
+	listOutput, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
+		Bucket: aws.String(bucketName),
+	})
+	if err != nil {
+		t.Fatalf("Failed to list objects before deleting bucket: %v", err)
+	}
+
+	for _, obj := range listOutput.Contents {
+		_, err := s3Client.DeleteObject(&s3.DeleteObjectInput{
+			Bucket: aws.String(bucketName),
+			Key:    obj.Key,
+		})
+		if err != nil {
+			t.Errorf("Failed to delete object %s: %v", *obj.Key, err)
+		}
+	}
+
+	err = s3Client.WaitUntilObjectNotExists(&s3.HeadObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String("test-object.txt"),
+	})
+	if err != nil {
+		t.Logf("WaitUntilObjectNotExists may have failed (possibly due to missing object): %v", err)
+	}
+
+	_, err = s3Client.DeleteBucket(&s3.DeleteBucketInput{
+		Bucket: aws.String(bucketName),
+	})
+	if err != nil {
+		t.Fatalf("DeleteBucket failed: %v", err)
+	}
+}

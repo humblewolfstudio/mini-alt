@@ -35,3 +35,14 @@ func (h *Handler) PutObjectOrBucket(c *gin.Context) {
 	object = object[1:]
 	h.PutObject(c, bucket, object)
 }
+
+func (h *Handler) DeleteObjectOrBucket(c *gin.Context) {
+	object := c.Param("object")
+
+	if object == "/" || object == "" {
+		h.DeleteBucket(c)
+	}
+
+	object = object[1:]
+	h.DeleteObject(c)
+}

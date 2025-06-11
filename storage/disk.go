@@ -1,9 +1,11 @@
 package storage
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func CreateBucketDirectory(bucketName string) error {
@@ -63,4 +65,24 @@ func GetObject(bucketName, objectKey string) (io.ReadWriter, error) {
 	}
 
 	return os.Open(path)
+}
+
+func DeleteBucket(bucketName string) error {
+	if bucketName == "" || bucketName == "." || bucketName == "/" {
+		return fmt.Errorf("invalid bucket name")
+	}
+
+	path := filepath.Join("uploads", bucketName)
+
+	absUploads, _ := filepath.Abs("uploads")
+	absTarget, _ := filepath.Abs(path)
+	if !strings.HasPrefix(absTarget, absUploads) {
+		return fmt.Errorf("refusing to delete outside of uploads directory")
+	}
+
+	if err := os.RemoveAll(path); err != nil {
+		return err
+	}
+
+	return nil
 }
