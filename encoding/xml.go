@@ -29,19 +29,25 @@ type S3Error struct {
 }
 
 type ListBucketResult struct {
-	XMLName     xml.Name  `xml:"ListBucketResult"`
-	Contents    []Content `xml:"Contents"`
-	IsTruncated bool      `xml:"IsTruncated"`
-	KeyCount    int       `xml:"KeyCount"`
-	MaxKeys     int       `xml:"MaxKeys"`
-	Name        string    `xml:"Name"`
-	StartAfter  string    `xml:"StartAfter"`
+	XMLName        xml.Name       `xml:"ListBucketResult"`
+	Contents       []Content      `xml:"Contents"`
+	CommonPrefixes []CommonPrefix `xml:"CommonPrefixes"`
+	IsTruncated    bool           `xml:"IsTruncated"`
+	KeyCount       int            `xml:"KeyCount"`
+	MaxKeys        int            `xml:"MaxKeys"`
+	Name           string         `xml:"Name"`
+	StartAfter     string         `xml:"StartAfter"`
+	Delimiter      string         `xml:"Delimiter"`
 }
 
 type Content struct {
 	Key          string    `xml:"Key"`
 	LastModified time.Time `xml:"LastModified"`
 	Size         int64     `xml:"Size"`
+}
+
+type CommonPrefix struct {
+	Prefix string `xml:"Prefix"`
 }
 
 type CopyObjectResult struct {

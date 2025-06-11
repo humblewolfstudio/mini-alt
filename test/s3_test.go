@@ -116,8 +116,19 @@ func TestListObjects(t *testing.T) {
 		t.Fatalf("Setup failed: %v", err)
 	}
 
-	result, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
+	_, err = s3Client.PutObject(&s3.PutObjectInput{
 		Bucket: aws.String("test-bucket"),
+		Key:    aws.String("testDir/test-object.txt"),
+		Body:   strings.NewReader("Hello, S3-compatible storage!"),
+	})
+	if err != nil {
+		t.Fatalf("Setup failed: %v", err)
+	}
+
+	result, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
+		Bucket:    aws.String("test-bucket"),
+		Prefix:    aws.String("testDir/"),
+		Delimiter: aws.String("/"),
 	})
 	if err != nil {
 		t.Fatalf("ListObjects failed: %v", err)
@@ -125,7 +136,7 @@ func TestListObjects(t *testing.T) {
 
 	found := false
 	for _, item := range result.Contents {
-		if *item.Key == "test-object.txt" {
+		if *item.Key == "testDir/test-object.txt" {
 			found = true
 			break
 		}

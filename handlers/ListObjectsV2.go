@@ -20,13 +20,13 @@ func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 		return
 	}
 
-	// Request parameters
 	params := c.Request.URL.Query()
 	var maxKeys = MaxObjects
 	var startAfter = ""
 	var prefix = ""
+	var delimiter = ""
 
-	// If max-keys exist, it has a value, and it's a correct integer we change the default maxKeys to the parameter one.
+	// Parse max-keys parameter
 	if params.Has("max-keys") {
 		parsedMaxKeys, err := strconv.Atoi(params.Get("max-keys"))
 		if err == nil {
@@ -34,35 +34,33 @@ func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 		}
 	}
 
-	// start-after is where you want to start listing from.
+	// Parse start-after parameter
 	if params.Has("start-after") {
 		startAfter = params.Get("start-after")
 	}
 
-	// prefix limits the response to keys that begin with the specified prefix.
+	// Parse prefix parameter
 	if params.Has("prefix") {
 		prefix = params.Get("prefix")
 	}
 
-	// XML Parsing
-	var xmlListBucketResult encoding.ListBucketResult
+	// Parse delimiter parameter (typically "/")
+	if params.Has("delimiter") {
+		delimiter = params.Get("delimiter")
+	}
 
+	var xmlListBucketResult encoding.ListBucketResult
 	xmlListBucketResult.Name = bucket
 	xmlListBucketResult.MaxKeys = maxKeys
 	xmlListBucketResult.StartAfter = startAfter
 
-	// If startAfter is different from 0 (default) we return in the response the value
-	if len(startAfter) > 0 {
-		xmlListBucketResult.StartAfter = startAfter
-	}
-
 	var xmlContents []encoding.Content
+	var commonPrefixes []encoding.CommonPrefix
 
 	keyCount := 0
 	isTruncated := false
-
-	hasPrefix := len(prefix) > 0
 	foundStartAfter := startAfter == ""
+	seenPrefixes := make(map[string]bool)
 
 	for _, object := range objects {
 		if !foundStartAfter {
@@ -77,22 +75,51 @@ func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 			break
 		}
 
-		if hasPrefix && !strings.HasPrefix(object.ObjectKey, prefix) {
+		if len(prefix) > 0 && !strings.HasPrefix(object.ObjectKey, prefix) {
 			continue
 		}
 
-		xmlContents = append(xmlContents, encoding.Content{
-			Key:          object.ObjectKey,
-			LastModified: object.LastModified,
-			Size:         object.Size,
-		})
+		if delimiter != "" {
+			remainingPart := strings.TrimPrefix(object.ObjectKey, prefix)
 
-		keyCount++
+			delimiterPos := strings.Index(remainingPart, delimiter)
+
+			if delimiterPos >= 0 {
+				commonPrefix := prefix + remainingPart[:delimiterPos+len(delimiter)]
+
+				if !seenPrefixes[commonPrefix] {
+					commonPrefixes = append(commonPrefixes, encoding.CommonPrefix{
+						Prefix: commonPrefix,
+					})
+					seenPrefixes[commonPrefix] = true
+					keyCount++
+				}
+				continue // Skip adding to Contents as it's in a subdirectory
+			}
+		}
+
+		// Add to Contents only if:
+		// 1. No prefix is specified, or
+		// 2. The object is exactly in the current prefix level (no additional delimiters)
+		if len(prefix) == 0 || !strings.Contains(strings.TrimPrefix(object.ObjectKey, prefix), delimiter) {
+			xmlContents = append(xmlContents, encoding.Content{
+				Key:          object.ObjectKey,
+				LastModified: object.LastModified,
+				Size:         object.Size,
+			})
+			keyCount++
+		}
 	}
 
+	// Set the response fields
 	xmlListBucketResult.Contents = xmlContents
+	xmlListBucketResult.CommonPrefixes = commonPrefixes
 	xmlListBucketResult.IsTruncated = isTruncated
 	xmlListBucketResult.KeyCount = keyCount
+
+	if delimiter != "" {
+		xmlListBucketResult.Delimiter = delimiter
+	}
 
 	c.XML(http.StatusOK, xmlListBucketResult)
 }
