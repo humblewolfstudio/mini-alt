@@ -36,6 +36,7 @@ func (h *Handler) PutObjectOrBucket(c *gin.Context) {
 	h.PutObject(c, bucket, object)
 }
 
+// DeleteObjectOrBucket receives the endpoint of deleting an object or a bucket (due to gin problem with * endpoints).
 func (h *Handler) DeleteObjectOrBucket(c *gin.Context) {
 	object := c.Param("object")
 
