@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// TODO clean and add description
 func (h *Handler) CopyObject(c *gin.Context, bucketName, objectKey, copySource string) {
 	parts := strings.SplitN(copySource, "/", 2)
 	/*
