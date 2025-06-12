@@ -6,14 +6,44 @@ import (
 	"time"
 )
 
+type ChecksumAlgorithm string
+
+const (
+	CRC32     ChecksumAlgorithm = "CRC32"
+	CRC32C                      = "CRC32C"
+	SHA1                        = "SHA1"
+	SHA256                      = "SHA256"
+	CRC64NVME                   = "CRC64NVME"
+)
+
+type ChecksumType string
+
+const (
+	COMPOSITE   ChecksumType = "COMPOSITE"
+	FULL_OBJECT              = "FULL_OBJECT"
+)
+
 type Object struct {
-	Id              int64
-	BucketName      string
-	ObjectKey       string
-	Size            int64
-	ContentType     string
-	LastModified    time.Time
-	IsDeletedMarker bool
+	Id                int64
+	ChecksumAlgorithm []ChecksumAlgorithm
+	ChecksumType      ChecksumType
+	ETag              string
+	Key               string
+	LastModified      time.Time
+	Size              int64
+}
+
+type ObjectMetadata struct {
+	Key                string
+	Bucket             string
+	CacheControl       string
+	ContentDisposition string
+	ContentEncoding    string
+	ContentLanguage    string
+	ContentLength      int64
+	ContentMD5         string
+	ContentType        string
+	Expires            time.Time
 }
 
 type Bucket struct {
@@ -63,7 +93,7 @@ func (s *InMemoryStore) PutObject(bucket, objectKey string, size int64) Object {
 	defer s.mu.Unlock()
 
 	obj := Object{
-		ObjectKey:    objectKey,
+		Key:          objectKey,
 		Size:         size,
 		LastModified: time.Now(),
 	}

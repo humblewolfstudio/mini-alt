@@ -64,7 +64,7 @@ func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 
 	for _, object := range objects {
 		if !foundStartAfter {
-			if object.ObjectKey == startAfter {
+			if object.Key == startAfter {
 				foundStartAfter = true
 			}
 			continue
@@ -75,12 +75,12 @@ func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 			break
 		}
 
-		if len(prefix) > 0 && !strings.HasPrefix(object.ObjectKey, prefix) {
+		if len(prefix) > 0 && !strings.HasPrefix(object.Key, prefix) {
 			continue
 		}
 
 		if delimiter != "" {
-			remainingPart := strings.TrimPrefix(object.ObjectKey, prefix)
+			remainingPart := strings.TrimPrefix(object.Key, prefix)
 
 			delimiterPos := strings.Index(remainingPart, delimiter)
 
@@ -101,9 +101,9 @@ func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 		// Add to Contents only if:
 		// 1. No prefix is specified, or
 		// 2. The object is exactly in the current prefix level (no additional delimiters)
-		if len(prefix) == 0 || !strings.Contains(strings.TrimPrefix(object.ObjectKey, prefix), delimiter) {
+		if len(prefix) == 0 || !strings.Contains(strings.TrimPrefix(object.Key, prefix), delimiter) {
 			xmlContents = append(xmlContents, encoding.Content{
-				Key:          object.ObjectKey,
+				Key:          object.Key,
 				LastModified: object.LastModified,
 				Size:         object.Size,
 			})
