@@ -7,4 +7,5 @@ type Store interface {
 	ListObjects(bucket string) []Object
 	DeleteObject(bucket, objectKey string)
 	DeleteBucket(bucket string)
+	GetObject(bucket, object string) (Object, error)
 }

@@ -13,6 +13,7 @@ func SetupRouter(store storage.Store) *gin.Engine {
 	r.GET("/", h.ListBuckets)
 	r.PUT("/:bucket/*object", h.PutObjectOrBucket)
 	r.GET("/:bucket/*object", h.GetObjectOrList)
+	r.HEAD("/:bucket/*object", h.HeadObject)
 	r.DELETE("/:bucket/*object", h.DeleteObjectOrBucket)
 
 	return r

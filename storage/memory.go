@@ -138,3 +138,14 @@ func (s *InMemoryStore) DeleteBucket(bucketName string) {
 
 	delete(s.buckets, bucketName)
 }
+
+func (s *InMemoryStore) GetObject(bucket, object string) (Object, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if bucketObjects, ok := s.buckets[bucket]; ok {
+		return bucketObjects[object], nil
+	}
+
+	return Object{}, errors.New("the specified key does not exist")
+}
