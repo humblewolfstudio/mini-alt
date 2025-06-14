@@ -3,9 +3,19 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"mini-alt/storage"
+	"mini-alt/types"
 	"mini-alt/utils"
 	"net/http"
 	"strconv"
+)
+
+type PutObjectErrors string
+
+const (
+	EncryptionTypeMismatch PutObjectErrors = "EncryptionTypeMismatch"
+	InvalidRequest                         = "InvalidRequest"
+	InvalidWriteOffset                     = "InvalidWriteOffset"
+	TooManyParts                           = "TooManyParts"
 )
 
 type PutObjectRequest struct {
@@ -17,49 +27,27 @@ type PutObjectRequest struct {
 	ContentLength      int64  `header:"Content-Length"`
 	ContentMD5         string `header:"Content-MD5"`
 	ContentType        string `header:"Content-Type"`
-	Expires            string `header:"Expires"` // RFC1123 or RFC3339 format
+	Expires            string `header:"Expires"`
 	IfMatch            string `header:"If-Match"`
 	IfNoneMatch        string `header:"If-None-Match"`
 }
 
-type PutObjectErrors string
-
-const (
-	EncryptionTypeMismatch PutObjectErrors = "EncryptionTypeMismatch"
-	InvalidRequest                         = "InvalidRequest"
-	InvalidWriteOffset                     = "InvalidWriteOffset"
-	TooManyParts                           = "TooManyParts"
-)
-
-// PutObject receives the bucket name, the object key and the object and persists it.
-// AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
-func (h *Handler) PutObject(c *gin.Context, bucket, object string) {
-	req, err := BindPutObjectRequest(c)
-
-	if err != nil {
-		HandleError(c, InvalidRequest, bucket, "Could not parse headers")
-		return
+func (req *PutObjectRequest) ToMetadata() types.Metadata {
+	return types.Metadata{
+		ACL:                req.ACL,
+		CacheControl:       req.CacheControl,
+		ContentDisposition: req.ContentDisposition,
+		ContentEncoding:    req.ContentEncoding,
+		ContentLanguage:    req.ContentLanguage,
+		ContentLength:      req.ContentLength,
+		ContentMD5:         req.ContentMD5,
+		ContentType:        req.ContentType,
+		Expires:            req.Expires,
 	}
-
-	path, err := storage.CreateObjectFilePath(bucket, object)
-	if err != nil {
-		HandleError(c, InvalidRequest, bucket, "Could not create object path")
-		return
-	}
-
-	written, err := storage.CreateObject(path, c.Request.Body)
-	if err != nil {
-		HandleError(c, InvalidRequest, bucket, "Could not create object")
-		return
-	}
-
-	h.Store.PutObject(bucket, object, written)
-	c.Status(http.StatusOK)
 }
 
-func BindPutObjectRequest(c *gin.Context) (*PutObjectRequest, error) {
+func BindPutObjectRequest(c *gin.Context) *PutObjectRequest {
 	contentLength, _ := strconv.ParseInt(c.GetHeader("Content-Length"), 10, 64)
-
 	return &PutObjectRequest{
 		ACL:                c.GetHeader("x-amz-acl"),
 		CacheControl:       c.GetHeader("Cache-Control"),
@@ -72,11 +60,46 @@ func BindPutObjectRequest(c *gin.Context) (*PutObjectRequest, error) {
 		Expires:            c.GetHeader("Expires"),
 		IfMatch:            c.GetHeader("If-Match"),
 		IfNoneMatch:        c.GetHeader("If-None-Match"),
-	}, nil
+	}
 }
 
-func HandleError(c *gin.Context, error PutObjectErrors, bucket, msg string) {
-	switch error {
+func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
+	_, err := h.Store.GetBucket(bucketName)
+	if err != nil {
+		_ = h.Store.PutBucket(bucketName)
+	}
+
+	path, err := storage.CreateObjectFilePath(bucketName, objectKey)
+	if err != nil {
+		HandleError(c, InvalidRequest, bucketName, "Could not create objectKey path")
+		return
+	}
+
+	written, err := storage.CreateObject(path, c.Request.Body)
+	if err != nil {
+		HandleError(c, InvalidRequest, bucketName, "Could not write object")
+		return
+	}
+
+	object, err := h.Store.PutObject(bucketName, objectKey, written)
+	if err != nil {
+		HandleError(c, InvalidRequest, bucketName, "Could not create object")
+		return
+	}
+
+	putObjectRequest := BindPutObjectRequest(c)
+
+	err = h.Store.PutMetadata(object.Id, putObjectRequest.ToMetadata())
+	if err != nil {
+		HandleError(c, InvalidRequest, bucketName, "Could not create metadata")
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func HandleError(c *gin.Context, err PutObjectErrors, bucket, msg string) {
+	switch err {
 	case EncryptionTypeMismatch:
 		utils.RespondS3Error(c, http.StatusBadRequest, "EncryptionTypeMismatch", "The existing object was created with a different encryption type. Subsequent write requests must include the appropriate encryption parameters in the request or while creating the session.", bucket)
 	case InvalidRequest:

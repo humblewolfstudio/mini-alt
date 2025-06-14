@@ -1,11 +1,15 @@
 package storage
 
+import "mini-alt/types"
+
 type Store interface {
-	ListBuckets() []Bucket
-	CreateBucket(name string) error
-	PutObject(bucket, object string, size int64) Object
-	ListObjects(bucket string) []Object
-	DeleteObject(bucket, objectKey string)
-	DeleteBucket(bucket string)
-	GetObject(bucket, object string) (Object, error)
+	PutObject(bucket, object string, size int64) (Object, error)
+	PutBucket(bucket string) error
+	PutMetadata(objectId int64, metadata types.Metadata) error
+	ListObjects(bucket string) ([]Object, error)
+	ListBuckets() ([]Bucket, error)
+	GetObject(bucket, key string) (Object, error)
+	GetBucket(bucket string) (Bucket, error)
+	DeleteObject(bucket, objectKey string) error
+	DeleteBucket(bucket string) error
 }

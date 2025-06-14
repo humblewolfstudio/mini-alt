@@ -20,6 +20,7 @@ func (h *Handler) CopyObject(c *gin.Context, bucketName, objectKey, copySource s
 	*/
 	srcBucketName := parts[0]
 	srcObjectKey := parts[1]
+	objectKey = strings.TrimPrefix(objectKey, "/")
 
 	srcFile, err := storage.GetObject(srcBucketName, srcObjectKey)
 	if err != nil {
@@ -33,7 +34,10 @@ func (h *Handler) CopyObject(c *gin.Context, bucketName, objectKey, copySource s
 		utils.RespondS3Error(c, http.StatusInternalServerError, "CouldNotWrite", "Could not write the Object.", bucketName)
 	}
 
-	object := h.Store.PutObject(bucketName, objectKey, written)
+	object, err := h.Store.PutObject(bucketName, objectKey, written)
+	if err != nil {
+		utils.RespondS3Error(c, http.StatusInternalServerError, "CouldNotWrite", "Could not write the Object.", bucketName)
+	}
 
 	var xmlCopyObjectResult encoding.CopyObjectResult
 

@@ -65,19 +65,19 @@ func NewInMemoryStore() *InMemoryStore {
 	}
 }
 
-func (s *InMemoryStore) CreateBucket(name string) error {
+func (s *InMemoryStore) PutBucket(bucket string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if _, exists := s.buckets[name]; exists {
+	if _, exists := s.buckets[bucket]; exists {
 		return errors.New("bucket already exists")
 	}
-	s.buckets[name] = make(map[string]Object)
-	s.meta[name] = Bucket{Name: name, CreatedAt: time.Now()}
+	s.buckets[bucket] = make(map[string]Object)
+	s.meta[bucket] = Bucket{Name: bucket, CreatedAt: time.Now()}
 	return nil
 }
 
-func (s *InMemoryStore) ListBuckets() []Bucket {
+func (s *InMemoryStore) ListBuckets() ([]Bucket, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -85,10 +85,10 @@ func (s *InMemoryStore) ListBuckets() []Bucket {
 	for name, bucket := range s.meta {
 		buckets = append(buckets, Bucket{Name: name, CreatedAt: bucket.CreatedAt})
 	}
-	return buckets
+	return buckets, nil
 }
 
-func (s *InMemoryStore) PutObject(bucket, objectKey string, size int64) Object {
+func (s *InMemoryStore) PutObject(bucket, objectKey string, size int64) (Object, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -104,48 +104,63 @@ func (s *InMemoryStore) PutObject(bucket, objectKey string, size int64) Object {
 
 	s.buckets[bucket][objectKey] = obj
 
-	return obj
+	return obj, nil
 }
 
-func (s *InMemoryStore) ListObjects(bucket string) []Object {
+func (s *InMemoryStore) ListObjects(bucket string) ([]Object, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	bucketObjects, exists := s.buckets[bucket]
 	if !exists {
-		return nil
+		return nil, nil
 	}
 
 	objects := make([]Object, 0, len(bucketObjects))
 	for _, obj := range bucketObjects {
 		objects = append(objects, obj)
 	}
-	return objects
+	return objects, nil
 }
 
-func (s *InMemoryStore) DeleteObject(bucket, objectKey string) {
+func (s *InMemoryStore) DeleteObject(bucket, objectKey string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if bucketObjects, ok := s.buckets[bucket]; ok {
 		delete(bucketObjects, objectKey)
 	}
+
+	return nil
 }
 
-func (s *InMemoryStore) DeleteBucket(bucketName string) {
+func (s *InMemoryStore) DeleteBucket(bucketName string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	delete(s.buckets, bucketName)
+
+	return nil
 }
 
-func (s *InMemoryStore) GetObject(bucket, object string) (Object, error) {
+func (s *InMemoryStore) GetObject(bucket, key string) (Object, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if bucketObjects, ok := s.buckets[bucket]; ok {
-		return bucketObjects[object], nil
+		return bucketObjects[key], nil
 	}
 
 	return Object{}, errors.New("the specified key does not exist")
+}
+
+func (s *InMemoryStore) GetBucket(bucket string) (Bucket, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if bucket, ok := s.meta[bucket]; ok {
+		return bucket, nil
+	}
+
+	return Bucket{}, errors.New("the specified bucket does not exist")
 }

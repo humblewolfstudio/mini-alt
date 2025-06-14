@@ -88,7 +88,7 @@ func TestCopyObject(t *testing.T) {
 
 	_, err = s3Client.CopyObject(&s3.CopyObjectInput{
 		Bucket:     aws.String("test-bucket"),
-		Key:        aws.String("test-object-copy.txt"),
+		Key:        aws.String("test-dir/test-object-copy.txt"),
 		CopySource: aws.String("test-bucket/test-object.txt"),
 	})
 	if err != nil {
@@ -97,7 +97,7 @@ func TestCopyObject(t *testing.T) {
 
 	_, err = s3Client.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String("test-bucket"),
-		Key:    aws.String("test-object-copy.txt"),
+		Key:    aws.String("test-dir/test-object-copy.txt"),
 	})
 	if err != nil {
 		t.Errorf("Verification failed - copied object not found: %v", err)

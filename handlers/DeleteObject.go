@@ -13,8 +13,11 @@ func (h *Handler) DeleteObject(c *gin.Context) {
 	bucketName := c.Param("bucketName")
 	objectKey := c.Param("object")
 
-	h.Store.DeleteObject(bucketName, objectKey)
-	storage.DeleteObjectFile(bucketName, objectKey)
+	// Also delete all files
+	err := h.Store.DeleteObject(bucketName, objectKey)
+	if err == nil {
+		storage.DeleteObjectFile(bucketName, objectKey)
+	}
 
 	c.Status(http.StatusNoContent)
 }

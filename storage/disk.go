@@ -8,8 +8,10 @@ import (
 	"strings"
 )
 
+const BucketsDir = "data"
+
 func CreateBucketDirectory(bucketName string) error {
-	path := filepath.Join("uploads" + bucketName)
+	path := filepath.Join(BucketsDir + bucketName)
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return err
 	}
@@ -17,12 +19,12 @@ func CreateBucketDirectory(bucketName string) error {
 }
 
 func DeleteObjectFile(bucketName, objectKey string) {
-	path := filepath.Join("uploads", bucketName, objectKey)
+	path := filepath.Join(BucketsDir, bucketName, objectKey)
 	_ = os.Remove(path)
 }
 
 func CreateObjectFilePath(bucketName, objectKey string) (string, error) {
-	fullPath := filepath.Join("uploads", bucketName, objectKey)
+	fullPath := filepath.Join(BucketsDir, bucketName, objectKey)
 	dir := filepath.Dir(fullPath)
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		return "", err
@@ -32,9 +34,14 @@ func CreateObjectFilePath(bucketName, objectKey string) (string, error) {
 }
 
 func CreateObject(path string, src io.Reader) (int64, error) {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return 0, err
+	}
+
 	file, err := os.Create(path)
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	defer func(file *os.File) {
@@ -50,7 +57,7 @@ func CreateObject(path string, src io.Reader) (int64, error) {
 }
 
 func GetObjectPath(bucketName, objectKey string) (string, error) {
-	path := filepath.Join("uploads", bucketName, objectKey)
+	path := filepath.Join(BucketsDir, bucketName, objectKey)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return path, err
 	}
@@ -72,12 +79,12 @@ func DeleteBucket(bucketName string) error {
 		return fmt.Errorf("invalid bucket name")
 	}
 
-	path := filepath.Join("uploads", bucketName)
+	path := filepath.Join(BucketsDir, bucketName)
 
-	absUploads, _ := filepath.Abs("uploads")
+	absUploads, _ := filepath.Abs(BucketsDir)
 	absTarget, _ := filepath.Abs(path)
 	if !strings.HasPrefix(absTarget, absUploads) {
-		return fmt.Errorf("refusing to delete outside of uploads directory")
+		return fmt.Errorf("refusing to delete outside of %s directory", BucketsDir)
 	}
 
 	if err := os.RemoveAll(path); err != nil {

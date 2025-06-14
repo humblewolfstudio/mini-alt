@@ -17,7 +17,11 @@ func (h *Handler) DeleteBucket(c *gin.Context) {
 		return
 	}
 
-	h.Store.DeleteBucket(bucketName)
+	err := h.Store.DeleteBucket(bucketName)
+	if err != nil {
+		utils.RespondS3Error(c, http.StatusInternalServerError, "InternalError", "Could not delete bucket", bucketName)
+		return
+	}
 
 	c.Status(http.StatusNoContent)
 }
