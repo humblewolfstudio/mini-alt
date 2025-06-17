@@ -57,7 +57,6 @@ func startWebServer() {
 
 	r.GET("/assets/*filepath", func(c *gin.Context) {
 		c.Request.URL.Path = "/assets" + c.Param("filepath")
-		log.Printf("Serving asset: %s", c.Request.URL.Path)
 		fileServer.ServeHTTP(c.Writer, c.Request)
 	})
 
