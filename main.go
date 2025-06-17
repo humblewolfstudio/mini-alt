@@ -38,7 +38,7 @@ func startApiServer() {
 		return
 	}
 
-	r := router.SetupRouter(store)
+	r := router.SetupAPIRouter(store)
 
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal(err)
@@ -46,16 +46,7 @@ func startApiServer() {
 }
 
 func startWebServer() {
-	r := gin.Default()
-
-	apiProxy := httputil.NewSingleHostReverseProxy(&url.URL{
-		Scheme: "http",
-		Host:   "localhost:8080",
-	})
-	r.Any("/api/*path", func(c *gin.Context) {
-		c.Request.URL.Path = c.Param("path")
-		apiProxy.ServeHTTP(c.Writer, c.Request)
-	})
+	r := router.SetupWebRouter()
 
 	fsys, err := fs.Sub(embeddedFiles, "frontend/dist")
 	if err != nil {
@@ -75,7 +66,14 @@ func startWebServer() {
 	})
 
 	r.GET("/", serveIndex(fsys))
-	r.NoRoute(serveIndex(fsys))
+
+	r.NoRoute(func(c *gin.Context) {
+		if !strings.HasPrefix(c.Request.URL.Path, "/api/") {
+			serveIndex(fsys)(c)
+			return
+		}
+		c.JSON(404, gin.H{"error": "Not found"})
+	})
 
 	if err := r.Run(":9001"); err != nil {
 		log.Fatal(err)
