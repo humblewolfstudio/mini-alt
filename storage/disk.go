@@ -11,7 +11,7 @@ import (
 const BucketsDir = "data"
 
 func CreateBucketDirectory(bucketName string) error {
-	path := filepath.Join(BucketsDir + bucketName)
+	path := filepath.Join(BucketsDir, bucketName)
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return err
 	}

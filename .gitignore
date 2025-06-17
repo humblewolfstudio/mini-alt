@@ -1,4 +1,5 @@
-uploads
+data
+build
 .idea
 
 go.sum
