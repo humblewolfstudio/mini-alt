@@ -10,8 +10,9 @@ import (
 	"mini-alt/router"
 	"mini-alt/storage"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 //go:embed frontend/dist/*
@@ -23,7 +24,15 @@ func main() {
 }
 
 func startApiServer() {
-	store, err := storage.NewSQLiteStore("./mini-alt.sqlite")
+	exe, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
+	}
+	appDir := filepath.Dir(exe)
+
+	dbPath := filepath.Join(appDir, "mini-alt.sqlite")
+	store, err := storage.NewSQLiteStore(dbPath)
+
 	if err != nil {
 		log.Fatal(err)
 		return

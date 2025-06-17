@@ -155,7 +155,8 @@ func (s *SQLiteStore) ListBuckets() ([]Bucket, error) {
 	var buckets []Bucket
 	for rows.Next() {
 		var b Bucket
-		if err := rows.Scan(&b.Name, &b.CreatedAt); err != nil {
+		if err := rows.Scan(&b.Id, &b.Name, &b.CreatedAt); err != nil {
+			println(err.Error())
 			return nil, err
 		}
 		buckets = append(buckets, b)
