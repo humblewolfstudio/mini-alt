@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"mini-alt/storage"
 	"mini-alt/types"
@@ -16,6 +17,7 @@ const (
 	InvalidRequest                         = "InvalidRequest"
 	InvalidWriteOffset                     = "InvalidWriteOffset"
 	TooManyParts                           = "TooManyParts"
+	PreconditionFailed                     = "PreconditionFailed"
 )
 
 type PutObjectRequest struct {
@@ -77,6 +79,32 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 		return
 	}
 
+	putObjectRequest := BindPutObjectRequest(c)
+
+	if putObjectRequest.IfMatch != "" {
+		existingObject, err := h.Store.GetObject(bucketName, objectKey)
+		if err == nil {
+			etag, err := storage.GetMD5Base64(existingObject.Key)
+			if err == nil && etag != putObjectRequest.IfMatch {
+				c.Header("ETag", etag)
+				HandleError(c, PreconditionFailed, bucketName, "At least one of the preconditions you specified did not hold.")
+				return
+			}
+		}
+	}
+
+	if putObjectRequest.IfNoneMatch != "" {
+		existingObject, err := h.Store.GetObject(bucketName, objectKey)
+		if err == nil {
+			etag, err := storage.GetMD5Base64(existingObject.Key)
+			if err == nil && etag == putObjectRequest.IfNoneMatch {
+				c.Header("ETag", etag)
+				HandleError(c, PreconditionFailed, bucketName, "An object already exists with the same ETag.")
+				return
+			}
+		}
+	}
+
 	written, err := storage.CreateObject(path, c.Request.Body)
 	if err != nil {
 		HandleError(c, InvalidRequest, bucketName, "Could not write object")
@@ -89,7 +117,14 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 		return
 	}
 
-	putObjectRequest := BindPutObjectRequest(c)
+	md5, err := storage.GetMD5Base64(path)
+	if err == nil {
+		if md5 == putObjectRequest.ContentMD5 {
+			fmt.Printf("Object integrity verified for %s", path)
+		} else {
+			fmt.Printf("Object integrity could not be verified for %s", path)
+		}
+	}
 
 	err = h.Store.PutMetadata(object.Id, putObjectRequest.ToMetadata())
 	if err != nil {
@@ -97,6 +132,7 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 		return
 	}
 
+	c.Header("ETag", md5)
 	c.Status(http.StatusOK)
 }
 
@@ -109,6 +145,8 @@ func HandleError(c *gin.Context, err PutObjectErrors, bucket, msg string) {
 	case InvalidWriteOffset:
 		utils.RespondS3Error(c, http.StatusBadRequest, "InvalidWriteOffset", "The write offset value that you specified does not match the current object size.", bucket)
 	case TooManyParts:
-		utils.RespondS3Error(c, http.StatusBadRequest, "TooManyParts", "ou have attempted to add more parts than the maximum of 10000 that are allowed for this object. You can use the CopyObject operation to copy this object to another and then add more data to the newly copied object.", bucket)
+		utils.RespondS3Error(c, http.StatusBadRequest, "TooManyParts", "You have attempted to add more parts than the maximum of 10000 that are allowed for this object. You can use the CopyObject operation to copy this object to another and then add more data to the newly copied object.", bucket)
+	case PreconditionFailed:
+		utils.RespondS3Error(c, http.StatusPreconditionFailed, "PreconditionFailed", msg, bucket)
 	}
 }
