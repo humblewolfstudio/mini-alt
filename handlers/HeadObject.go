@@ -7,6 +7,8 @@ import (
 	"strconv"
 )
 
+// HeadObject returns the metadata of an object.
+// AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadObject.html
 func (h *Handler) HeadObject(c *gin.Context) {
 	bucketName := c.Param("bucket")
 	objectKey := c.Param("object")
@@ -15,6 +17,7 @@ func (h *Handler) HeadObject(c *gin.Context) {
 
 	if err != nil {
 		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchKey", err.Error(), bucketName)
+		return
 	}
 
 	c.Header("Last-Modified", object.LastModified.Format(http.TimeFormat))

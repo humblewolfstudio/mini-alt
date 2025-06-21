@@ -13,7 +13,7 @@ import (
 func createTestClient() *s3.S3 {
 	cfg := &aws.Config{
 		Region:           aws.String("us-east-1"),
-		Endpoint:         aws.String("http://localhost:8080"),
+		Endpoint:         aws.String("http://localhost:9000"),
 		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
 		Credentials: credentials.NewStaticCredentials(

@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"flag"
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 	"io"
@@ -19,8 +20,16 @@ import (
 var embeddedFiles embed.FS
 
 func main() {
-	go startApiServer()
-	startWebServer()
+	noWeb := flag.Bool("no-web", false, "Disable web interface")
+	flag.Parse()
+
+	if *noWeb {
+		startApiServer()
+		println("Starting without web interface")
+	} else {
+		go startApiServer()
+		startWebServer()
+	}
 }
 
 func startApiServer() {
@@ -40,7 +49,7 @@ func startApiServer() {
 
 	r := router.SetupAPIRouter(store)
 
-	if err := r.Run(":8080"); err != nil {
+	if err := r.Run(":9000"); err != nil {
 		log.Fatal(err)
 	}
 }
