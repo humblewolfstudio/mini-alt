@@ -181,7 +181,7 @@ func (s *SQLiteStore) GetBucket(bucket string) (Bucket, error) {
 	row := s.db.QueryRow(`SELECT * FROM buckets WHERE name = ?`, bucket)
 	var b Bucket
 	b.Name = bucket
-	if err := row.Scan(&b.Name, &b.CreatedAt); err != nil {
+	if err := row.Scan(&b.Id, &b.Name, &b.CreatedAt); err != nil {
 		return Bucket{}, err
 	}
 

@@ -42,8 +42,21 @@ func (h *Handler) DeleteObjectOrBucket(c *gin.Context) {
 
 	if object == "/" || object == "" {
 		h.DeleteBucket(c)
+		return
 	}
 
 	object = object[1:]
 	h.DeleteObject(c)
+}
+
+// HeadObjectOrBucket receives the endpoint of returning the metadata of an object or a bucket.
+func (h *Handler) HeadObjectOrBucket(c *gin.Context) {
+	object := c.Param("object")
+
+	if object == "/" || object == "" {
+		h.HeadBucket(c)
+		return
+	}
+
+	h.HeadObject(c)
 }
