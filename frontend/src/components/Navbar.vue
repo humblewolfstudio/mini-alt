@@ -1,9 +1,10 @@
 <script setup lang="ts">
-
 import {computed, ref} from "vue";
+import { useRoute } from 'vue-router';
 
 const isCollapsed = ref(false)
 const isAdmin = ref(true);
+const route = useRoute();
 
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
@@ -11,6 +12,12 @@ const toggleCollapse = () => {
 
 const allRoutes = [
   { path: '/', name: 'Home', icon: 'home' },
+  {
+    path: '/buckets',
+    name: 'Buckets',
+    icon: 'buckets',
+    activePaths: ['/buckets', '/buckets/create-bucket']
+  },
 ];
 
 const filteredRoutes = computed(() => {
@@ -19,7 +26,11 @@ const filteredRoutes = computed(() => {
       : allRoutes.filter(route => route.path === '/');
 });
 
-
+const isActive = (navItem: any) => {
+  return navItem.activePaths
+      ? navItem.activePaths.includes(route.path)
+      : route.path === navItem.path;
+};
 </script>
 
 <template>
@@ -29,24 +40,20 @@ const filteredRoutes = computed(() => {
     </button>
 
     <nav class="navbar">
-      <RouterLink v-for="route in filteredRoutes" :key="route.path" :to="route.path" class="nav-link">
+      <RouterLink
+          v-for="route in filteredRoutes"
+          :key="route.path"
+          :to="route.path"
+          class="nav-link"
+          :class="{ 'router-link-exact-active': isActive(route) }"
+      >
         <div class="icon-container">
-          <img class="nav-icon" :src="'/' + route.icon + '.svg'" width="25" height="25" />
+          <img class="nav-icon" :src="'/icons/' + route.icon + '.svg'" width="25" height="25" />
         </div>
         <div class="text-container">
           <span class="nav-text">{{ route.name }}</span>
         </div>
       </RouterLink>
-      <!--
-      <router-link to="/logout" class="nav-link bottom">
-        <div class="icon-container">
-          <img class="nav-icon" src="/icons/logout.svg" width="25" height="25" />
-        </div>
-        <div class="text-container">
-          <span class="nav-text">LogOut</span>
-        </div>
-      </router-link>
-      -->
     </nav>
   </div>
 </template>

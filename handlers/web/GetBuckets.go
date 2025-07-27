@@ -5,8 +5,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func createTestClient() *s3.S3 {
@@ -25,13 +23,10 @@ func createTestClient() *s3.S3 {
 	return s3.New(sess)
 }
 
-func ListBuckets(c *gin.Context) {
-	s3Client := createTestClient()
-
-	bucketList, err := s3Client.ListBuckets(&s3.ListBucketsInput{})
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	}
-
-	c.JSON(http.StatusOK, bucketList.Buckets)
+type FileItem struct {
+	Key          string `json:"key"`
+	Name         string `json:"name"`
+	Size         int64  `json:"size"`
+	LastModified string `json:"lastModified"`
+	IsFolder     bool   `json:"isFolder"`
 }

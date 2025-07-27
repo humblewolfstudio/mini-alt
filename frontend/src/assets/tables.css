@@ -126,6 +126,10 @@ h1 {
     background-color: white;
 }
 
+.clickable-row {
+    cursor: pointer;
+}
+
 @keyframes spin {
     0% {
         transform: rotate(0deg);

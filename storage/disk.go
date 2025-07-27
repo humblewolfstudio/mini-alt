@@ -71,27 +71,54 @@ func DeleteObjectFile(bucketName, objectKey string) error {
 		return err
 	}
 	path := filepath.Join(bucketsDir, bucketName, objectKey)
-	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+	if err := os.RemoveAll(path); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("failed to delete object file: %w", err)
 	}
 	return nil
 }
 
 func CreateObjectFilePath(bucketName, objectKey string) (string, error) {
+	if strings.Contains(objectKey, "..") || filepath.IsAbs(objectKey) {
+		return "", fmt.Errorf("invalid object key: %s", objectKey)
+	}
+
+	cleanedKey := filepath.Clean(objectKey)
 	bucketsDir, err := GetBucketsDir()
 	if err != nil {
 		return "", err
 	}
-	fullPath := filepath.Join(bucketsDir, bucketName, objectKey)
+
+	fullPath := filepath.Join(bucketsDir, bucketName, cleanedKey)
+	bucketRoot := filepath.Join(bucketsDir, bucketName)
+
+	if !strings.HasPrefix(fullPath, bucketRoot) {
+		return "", fmt.Errorf("object key escapes bucket path: %s", objectKey)
+	}
+
 	dir := filepath.Dir(fullPath)
+
+	if info, err := os.Stat(dir); err == nil && !info.IsDir() {
+		if err := os.Remove(dir); err != nil {
+			return "", fmt.Errorf("cannot convert file to directory: %w", err)
+		}
+	}
+
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		return "", fmt.Errorf("failed to create object path directories: %w", err)
 	}
+
 	return fullPath, nil
 }
 
 func CreateObject(path string, src io.Reader) (int64, error) {
 	dir := filepath.Dir(path)
+
+	if info, err := os.Stat(dir); err == nil && !info.IsDir() {
+		if err := os.Remove(dir); err != nil {
+			return 0, fmt.Errorf("cannot convert file to directory: %w", err)
+		}
+	}
+
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return 0, fmt.Errorf("failed to create object directory: %w", err)
 	}

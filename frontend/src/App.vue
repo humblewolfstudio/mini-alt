@@ -1,6 +1,8 @@
 <script setup>
 import Navbar from "./components/Navbar.vue";
 import './assets/tables.css'
+import './assets/forms.css'
+import './assets/modals.css'
 
 </script>
 

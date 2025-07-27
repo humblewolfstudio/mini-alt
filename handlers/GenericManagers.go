@@ -45,7 +45,6 @@ func (h *Handler) DeleteObjectOrBucket(c *gin.Context) {
 		return
 	}
 
-	object = object[1:]
 	h.DeleteObject(c)
 }
 

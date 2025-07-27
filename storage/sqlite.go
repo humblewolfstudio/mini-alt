@@ -189,7 +189,8 @@ func (s *SQLiteStore) GetBucket(bucket string) (Bucket, error) {
 }
 
 func (s *SQLiteStore) DeleteObject(bucket, key string) error {
-	_, err := s.db.Exec(`DELETE FROM objects WHERE bucket_name = ? AND key = ?`, bucket, key)
+	prefix := key + "%"
+	_, err := s.db.Exec(`DELETE FROM objects WHERE bucket_name = ? AND key LIKE ? ESCAPE '\'`, bucket, prefix)
 	return err
 }
 

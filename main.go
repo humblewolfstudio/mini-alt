@@ -38,7 +38,7 @@ func startApiServer() {
 		log.Fatal(err)
 	}
 	appDir := filepath.Dir(exe)
-
+	println("Starting api server in ", appDir)
 	dbPath := filepath.Join(appDir, "mini-alt.sqlite")
 	store, err := storage.NewSQLiteStore(dbPath)
 
