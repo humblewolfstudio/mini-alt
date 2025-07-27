@@ -207,26 +207,21 @@ func (s *SQLiteStore) DeleteBucket(bucket string) error {
 	return err
 }
 
-func (s *SQLiteStore) CreateCredentials() (id int64, accessKey, secretKey string, err error) {
+func (s *SQLiteStore) CreateCredentials() (accessKey, secretKey string, err error) {
 	accessKey = utils.GenerateRandomKey(16)
 	secretKey = utils.GenerateRandomKey(32)
 
 	encryptedSecret, err := utils.Encrypt(secretKey)
 	if err != nil {
-		return -1, "", "", err
+		return "", "", err
 	}
 
-	result, err := s.db.Exec(`INSERT INTO credentials (access_key, secret_key_encrypted) VALUES (?, ?)`, accessKey, encryptedSecret)
+	_, err = s.db.Exec(`INSERT INTO credentials (access_key, secret_key_encrypted) VALUES (?, ?)`, accessKey, encryptedSecret)
 	if err != nil {
-		return -1, "", "", err
+		return "", "", err
 	}
 
-	id, err = result.LastInsertId()
-	if err != nil {
-		return 0, "", "", err
-	}
-
-	return 0, accessKey, secretKey, nil
+	return accessKey, secretKey, nil
 }
 
 func (s *SQLiteStore) GetSecretKey(accessKey string) (string, error) {
