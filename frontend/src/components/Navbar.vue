@@ -18,6 +18,11 @@ const allRoutes = [
     icon: 'buckets',
     activePaths: ['/buckets', '/buckets/create-bucket']
   },
+  {
+    path: '/credentials',
+    name: 'Credentials',
+    icon: 'credentials'
+  }
 ];
 
 const filteredRoutes = computed(() => {

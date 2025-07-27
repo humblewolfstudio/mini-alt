@@ -4,3 +4,4 @@ build
 
 go.sum
 mini-alt.sqlite
+.env

@@ -4,6 +4,7 @@ import (
 	"embed"
 	"flag"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 	"io"
 	"io/fs"
@@ -23,12 +24,23 @@ func main() {
 	noWeb := flag.Bool("no-web", false, "Disable web interface")
 	flag.Parse()
 
+	loadEnv()
+
 	if *noWeb {
 		startApiServer()
 		println("Starting without web interface")
 	} else {
 		go startApiServer()
 		startWebServer()
+	}
+}
+
+func loadEnv() {
+	if os.Getenv("APP_ENV") != "production" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Println("Warning: Error loading .env file - relying on system environment variables")
+		}
 	}
 }
 

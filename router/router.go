@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"mini-alt/handlers/api"
 	"mini-alt/handlers/web"
+	"mini-alt/middlewares"
 	"mini-alt/storage"
 )
 
@@ -13,6 +14,8 @@ func SetupAPIRouter(store storage.Store) *gin.Engine {
 	r.Use(customLogger("API-SERVER"))
 
 	h := api.Handler{Store: store}
+
+	r.Use(middlewares.APIAuthenticationMiddleware(&h))
 
 	r.GET("/", h.ListBuckets)
 	r.PUT("/:bucket/*object", h.PutObjectOrBucket)

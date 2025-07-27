@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"mini-alt/types"
+	"mini-alt/utils"
 	"time"
 )
 
@@ -61,6 +62,13 @@ func (s *SQLiteStore) initSchema() error {
 	    content_type TEXT,
 	    expires DATETIME,
 	    FOREIGN KEY(object_id) REFERENCES objects(id) ON DELETE CASCADE
+	);
+
+	CREATE TABLE IF NOT EXISTS  credentials (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		access_key TEXT UNIQUE NOT NULL,
+		secret_key_encrypted TEXT NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 `
 	_, err := s.db.Exec(schema)
@@ -197,4 +205,36 @@ func (s *SQLiteStore) DeleteObject(bucket, key string) error {
 func (s *SQLiteStore) DeleteBucket(bucket string) error {
 	_, err := s.db.Exec(`DELETE FROM buckets WHERE name = ?`, bucket)
 	return err
+}
+
+func (s *SQLiteStore) CreateCredentials() (id int64, accessKey, secretKey string, err error) {
+	accessKey = utils.GenerateRandomKey(16)
+	secretKey = utils.GenerateRandomKey(32)
+
+	encryptedSecret, err := utils.Encrypt(secretKey)
+	if err != nil {
+		return -1, "", "", err
+	}
+
+	result, err := s.db.Exec(`INSERT INTO credentials (access_key, secret_key_encrypted) VALUES (?, ?)`, accessKey, encryptedSecret)
+	if err != nil {
+		return -1, "", "", err
+	}
+
+	id, err = result.LastInsertId()
+	if err != nil {
+		return 0, "", "", err
+	}
+
+	return 0, accessKey, secretKey, nil
+}
+
+func (s *SQLiteStore) GetSecretKey(accessKey string) (string, error) {
+	row := s.db.QueryRow(`SELECT secret_key_encrypted FROM credentials WHERE access_key = ?`, accessKey)
+	var encrypted string
+	if err := row.Scan(&encrypted); err != nil {
+		return "", err
+	}
+
+	return utils.Decrypt(encrypted)
 }
