@@ -3,7 +3,7 @@ package router
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"mini-alt/handlers"
+	"mini-alt/handlers/api"
 	"mini-alt/handlers/web"
 	"mini-alt/storage"
 )
@@ -12,7 +12,7 @@ func SetupAPIRouter(store storage.Store) *gin.Engine {
 	r := gin.New()
 	r.Use(customLogger("API-SERVER"))
 
-	h := handlers.Handler{Store: store}
+	h := api.Handler{Store: store}
 
 	r.GET("/", h.ListBuckets)
 	r.PUT("/:bucket/*object", h.PutObjectOrBucket)

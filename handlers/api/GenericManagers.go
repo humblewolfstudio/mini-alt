@@ -1,6 +1,8 @@
-package handlers
+package api
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+)
 
 // GetObjectOrList receives the endpoint of getting an object or listing bucket objects (due to gin problem with * endpoints).
 func (h *Handler) GetObjectOrList(c *gin.Context) {
