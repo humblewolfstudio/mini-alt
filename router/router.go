@@ -27,7 +27,7 @@ func SetupWebRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(customLogger("WEB-SERVER"))
 
-	apiGroup := r.Group("/apiGroup")
+	apiGroup := r.Group("/api")
 	{
 		apiGroup.GET("/buckets", web.ListBuckets)
 		apiGroup.POST("/buckets", web.PutBucket)
