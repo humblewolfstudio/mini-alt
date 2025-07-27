@@ -27,18 +27,18 @@ func SetupWebRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(customLogger("WEB-SERVER"))
 
-	api := r.Group("/api")
+	apiGroup := r.Group("/apiGroup")
 	{
-		api.GET("/buckets", web.ListBuckets)
-		api.POST("/buckets", web.PutBucket)
-		api.GET("/files/list", web.ListFiles)
-		api.GET("/files/list-folders", web.ListFolders)
-		api.GET("/files/download", web.DownloadFile)
-		api.POST("/files/upload", web.UploadFiles)
-		api.POST("/files/create-folder", web.CreateFolder)
-		api.POST("/files/delete", web.DeleteFile)
-		api.PUT("/files/rename", web.RenameFile)
-		api.PUT("/files/move", web.MoveFile)
+		apiGroup.GET("/buckets", web.ListBuckets)
+		apiGroup.POST("/buckets", web.PutBucket)
+		apiGroup.GET("/files/list", web.ListFiles)
+		apiGroup.GET("/files/list-folders", web.ListFolders)
+		apiGroup.GET("/files/download", web.DownloadFile)
+		apiGroup.POST("/files/upload", web.UploadFiles)
+		apiGroup.POST("/files/create-folder", web.CreateFolder)
+		apiGroup.POST("/files/delete", web.DeleteFile)
+		apiGroup.PUT("/files/rename", web.RenameFile)
+		apiGroup.PUT("/files/move", web.MoveFile)
 	}
 
 	return r
