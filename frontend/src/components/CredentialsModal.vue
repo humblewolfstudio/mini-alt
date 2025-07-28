@@ -122,11 +122,6 @@ function copyToClipboard(value: string, field: string) {
   background: #3aa876;
 }
 
-.copied-msg {
-  font-size: 0.75rem;
-  color: #16a34a;
-}
-
 .warning {
   color: #d97706;
   font-size: 0.875rem;

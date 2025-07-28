@@ -54,7 +54,7 @@ const isActive = (navItem: any) => {
           :class="{ 'router-link-exact-active': isActive(route) }"
       >
         <div class="icon-container">
-          <img class="nav-icon" :src="'/icons/' + route.icon + '.svg'" width="25" height="25" />
+          <img class="nav-icon" :src="'/icons/' + route.icon + '.svg'" width="25" height="25"  :alt="route.name"/>
         </div>
         <div class="text-container">
           <span class="nav-text">{{ route.name }}</span>
