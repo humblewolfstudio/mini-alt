@@ -10,7 +10,7 @@ import (
 )
 
 // TODO clean and add description
-func (h *Handler) CopyObject(c *gin.Context, bucketName, objectKey, copySource string) {
+func (h *ApiHandler) CopyObject(c *gin.Context, bucketName, objectKey, copySource string) {
 	parts := strings.SplitN(copySource, "/", 2)
 	/*
 		if len(parts) != 2 {

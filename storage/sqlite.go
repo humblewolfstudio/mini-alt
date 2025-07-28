@@ -233,3 +233,25 @@ func (s *SQLiteStore) GetSecretKey(accessKey string) (string, error) {
 
 	return utils.Decrypt(encrypted)
 }
+
+func (s *SQLiteStore) ListCredentials() ([]Credentials, error) {
+	rows, err := s.db.Query(`SELECT access_key, created_at FROM credentials`)
+	if err != nil {
+		return nil, err
+	}
+	defer func(rows *sql.Rows) {
+		_ = rows.Close()
+	}(rows)
+
+	var creds []Credentials
+	for rows.Next() {
+		var c Credentials
+		if err := rows.Scan(&c.AccessKey, &c.CreatedAt); err != nil {
+			return nil, err
+		}
+
+		creds = append(creds, c)
+	}
+
+	return creds, nil
+}

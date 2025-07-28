@@ -14,4 +14,5 @@ type Store interface {
 	DeleteBucket(bucket string) error
 	CreateCredentials() (accessKey, secretKey string, err error)
 	GetSecretKey(accessKey string) (string, error)
+	ListCredentials() ([]Credentials, error)
 }

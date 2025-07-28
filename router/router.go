@@ -13,7 +13,7 @@ func SetupAPIRouter(store storage.Store) *gin.Engine {
 	r := gin.New()
 	r.Use(customLogger("API-SERVER"))
 
-	h := api.Handler{Store: store}
+	h := api.ApiHandler{Store: store}
 
 	r.Use(middlewares.APIAuthenticationMiddleware(&h))
 
@@ -26,9 +26,11 @@ func SetupAPIRouter(store storage.Store) *gin.Engine {
 	return r
 }
 
-func SetupWebRouter() *gin.Engine {
+func SetupWebRouter(store storage.Store) *gin.Engine {
 	r := gin.New()
 	r.Use(customLogger("WEB-SERVER"))
+
+	h := web.WebHandler{Store: store}
 
 	apiGroup := r.Group("/api")
 	{
@@ -42,6 +44,8 @@ func SetupWebRouter() *gin.Engine {
 		apiGroup.POST("/files/delete", web.DeleteFile)
 		apiGroup.PUT("/files/rename", web.RenameFile)
 		apiGroup.PUT("/files/move", web.MoveFile)
+
+		apiGroup.GET("/credentials", h.ListCredentials)
 	}
 
 	return r

@@ -1,9 +1,9 @@
-package api
+package web
 
 import (
 	"mini-alt/storage"
 )
 
-type ApiHandler struct {
+type WebHandler struct {
 	Store storage.Store
 }

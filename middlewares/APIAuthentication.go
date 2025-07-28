@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func APIAuthenticationMiddleware(h *api.Handler) gin.HandlerFunc {
+func APIAuthenticationMiddleware(h *api.ApiHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		dateHeader := c.GetHeader("x-amz-date")

@@ -9,7 +9,7 @@ import (
 
 // HeadObject returns the metadata of an object.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadObject.html
-func (h *Handler) HeadObject(c *gin.Context) {
+func (h *ApiHandler) HeadObject(c *gin.Context) {
 	bucketName := c.Param("bucket")
 	objectKey := c.Param("object")
 

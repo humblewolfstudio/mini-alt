@@ -25,14 +25,33 @@ func main() {
 	flag.Parse()
 
 	loadEnv()
+	store := startDatabase()
 
 	if *noWeb {
-		startApiServer()
+		startApiServer(store)
 		println("Starting without web interface")
 	} else {
-		go startApiServer()
-		startWebServer()
+		go startApiServer(store)
+		startWebServer(store)
 	}
+}
+
+func startDatabase() storage.Store {
+	exe, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
+	}
+	appDir := filepath.Dir(exe)
+	println("Starting server in ", appDir)
+	dbPath := filepath.Join(appDir, "mini-alt.sqlite")
+	store, err := storage.NewSQLiteStore(dbPath)
+
+	if err != nil {
+		log.Fatal(err)
+		return nil
+	}
+
+	return store
 }
 
 func loadEnv() {
@@ -44,20 +63,7 @@ func loadEnv() {
 	}
 }
 
-func startApiServer() {
-	exe, err := os.Executable()
-	if err != nil {
-		log.Fatal(err)
-	}
-	appDir := filepath.Dir(exe)
-	println("Starting api server in ", appDir)
-	dbPath := filepath.Join(appDir, "mini-alt.sqlite")
-	store, err := storage.NewSQLiteStore(dbPath)
-
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
+func startApiServer(store storage.Store) {
 
 	r := router.SetupAPIRouter(store)
 
@@ -66,8 +72,8 @@ func startApiServer() {
 	}
 }
 
-func startWebServer() {
-	r := router.SetupWebRouter()
+func startWebServer(store storage.Store) {
+	r := router.SetupWebRouter(store)
 
 	fsys, err := fs.Sub(embeddedFiles, "frontend/dist")
 	if err != nil {
