@@ -1,6 +1,11 @@
 <script setup lang="ts">
 
 import {onMounted, ref} from "vue";
+import DeleteCredentialsModal from "../components/credentials/DeleteCredentialsModal.vue";
+
+const showDeleteModal = ref(false)
+
+const selectedAccessKey = ref('')
 
 const isLoading = ref(false)
 const credentials = ref([])
@@ -25,6 +30,31 @@ const fetchCredentials = async () => {
   }
 }
 
+const promptDelete = (accessKey: string) => {
+  selectedAccessKey.value = accessKey
+  showDeleteModal.value = true
+}
+
+const handleDelete = async () => {
+  if (selectedAccessKey.value === '') return
+
+  try {
+    await fetch('/api/credentials/delete', {
+      method: 'POST',
+      body: JSON.stringify({
+        accessKey: selectedAccessKey.value
+      })
+    })
+
+    selectedAccessKey.value = ''
+    await fetchCredentials()
+  } catch (err) {
+    error.value = `Failed to delete ${selectedAccessKey.value}`
+  } finally {
+    showDeleteModal.value = false
+  }
+}
+
 onMounted(() => {
   fetchCredentials()
 })
@@ -44,12 +74,16 @@ onMounted(() => {
           <tr>
             <th>Access Key</th>
             <th>Created</th>
+            <th>Actions</th>
           </tr>
           </thead>
           <tbody>
           <tr v-for="cred in credentials" :key="cred.Id">
             <td>{{cred.AccessKey}}</td>
             <td>{{cred.CreatedAt}}</td>
+            <td>
+              <button @click="promptDelete(cred.AccessKey)">Delete</button>
+            </td>
           </tr>
           </tbody>
         </table>
@@ -70,6 +104,13 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <DeleteCredentialsModal
+        v-if="showDeleteModal"
+        :access-key="selectedAccessKey"
+        @close="showDeleteModal = false"
+        @confirm="handleDelete"
+      />
   </div>
 </template>
 

@@ -255,3 +255,8 @@ func (s *SQLiteStore) ListCredentials() ([]Credentials, error) {
 
 	return creds, nil
 }
+
+func (s *SQLiteStore) DeleteCredentials(accessKey string) error {
+	_, err := s.db.Exec(`DELETE FROM credentials WHERE access_key = ?`, accessKey)
+	return err
+}

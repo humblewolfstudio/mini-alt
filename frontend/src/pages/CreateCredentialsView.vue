@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {useRouter} from "vue-router";
 import {ref} from "vue";
-import CredentialsModal from "../components/CredentialsModal.vue";
+import ShowCredentialsModal from "../components/credentials/ShowCredentialsModal.vue";
 
 const router = useRouter()
 const accessKey = ref('')
@@ -50,8 +50,7 @@ const createCredentials = async () => {
       <form @submit.prevent="createCredentials" class="form">
         <div class="form-actions">
           <button type="submit" :disabled="isLoading">
-            <span v-if="isLoading" class="spinner"></span>
-            {{isLoading ? 'Creating...' : 'Create Credentials'}}
+            Create Credentials
           </button>
           <button type="button" @click="router.push('/credentials')" :disabled="isLoading">Cancel</button>
         </div>
@@ -60,7 +59,7 @@ const createCredentials = async () => {
       </form>
     </div>
 
-    <CredentialsModal
+    <ShowCredentialsModal
       v-if="showCredentialsModal"
       :accessKey="accessKey"
       :secretKey="secretKey"

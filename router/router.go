@@ -47,6 +47,7 @@ func SetupWebRouter(store storage.Store) *gin.Engine {
 
 		apiGroup.GET("/credentials", h.ListCredentials)
 		apiGroup.POST("/credentials", h.CreateCredentials)
+		apiGroup.POST("/credentials/delete", h.DeleteCredentials)
 	}
 
 	return r

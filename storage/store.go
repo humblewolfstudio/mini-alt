@@ -15,4 +15,5 @@ type Store interface {
 	CreateCredentials() (accessKey, secretKey string, err error)
 	GetSecretKey(accessKey string) (string, error)
 	ListCredentials() ([]Credentials, error)
+	DeleteCredentials(accessKey string) error
 }
