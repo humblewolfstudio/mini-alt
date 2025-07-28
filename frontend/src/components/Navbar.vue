@@ -15,8 +15,7 @@ const allRoutes = [
   {
     path: '/buckets',
     name: 'Buckets',
-    icon: 'buckets',
-    activePaths: ['/buckets', '/buckets/create-bucket']
+    icon: 'buckets'
   },
   {
     path: '/credentials',
@@ -32,9 +31,11 @@ const filteredRoutes = computed(() => {
 });
 
 const isActive = (navItem: any) => {
-  return navItem.activePaths
-      ? navItem.activePaths.includes(route.path)
-      : route.path === navItem.path;
+  if (navItem.path.includes(':')) {
+    const regex = new RegExp('^' + navItem.path.replace(/:[^/]+/g, '[^/]+') + '($|/)');
+    return regex.test(route.path);
+  }
+  return route.path === navItem.path || route.path.startsWith(navItem.path + '/');
 };
 </script>
 

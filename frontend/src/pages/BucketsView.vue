@@ -34,10 +34,7 @@ onMounted(() => {
   <div class="container">
     <div class="header">
       <h1>Buckets</h1>
-      <button @click="fetchBuckets" :disabled="isLoading">
-        {{ isLoading ? 'Refreshing...' : 'Refresh' }}
-      </button>
-      <RouterLink to="/buckets/create-bucket">New Bucket</RouterLink>
+      <RouterLink to="/buckets/create-bucket">Create Bucket</RouterLink>
     </div>
     <div class="table-content">
       <div class="table-wrapper">

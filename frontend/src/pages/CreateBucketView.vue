@@ -54,7 +54,7 @@ const createBucket = async () => {
     </div>
 
     <div class="form-container">
-      <form @submit.prevent="createBucket" class="bucket-form">
+      <form @submit.prevent="createBucket" class="form">
         <div class="form-group">
           <label for="bucketName">Bucket Name</label>
           <input

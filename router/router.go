@@ -46,6 +46,7 @@ func SetupWebRouter(store storage.Store) *gin.Engine {
 		apiGroup.PUT("/files/move", web.MoveFile)
 
 		apiGroup.GET("/credentials", h.ListCredentials)
+		apiGroup.POST("/credentials", h.CreateCredentials)
 	}
 
 	return r

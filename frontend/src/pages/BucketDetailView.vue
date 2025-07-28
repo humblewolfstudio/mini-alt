@@ -158,9 +158,6 @@ onMounted(() => {
     <div class="header">
       <h1>Bucket: {{ bucketName }}</h1>
       <div class="action-buttons">
-        <button class="sync-button" @click="refreshFiles" :disabled="isLoading">
-          <span class="sync-icon" :class="{ 'rotate-animation': isLoading }">↻</span>
-        </button>
         <button class="img-button tooltip" @click="showUploadModal = true">
           <img src="/icons/document-new.svg" width="24" height="24" alt="Upload file">
           <span class="tooltiptext">Upload file</span>
@@ -264,3 +261,9 @@ onMounted(() => {
     />
   </div>
 </template>
+
+<style scoped>
+.tooltiptext {
+  margin-left: 5px;
+}
+</style>
