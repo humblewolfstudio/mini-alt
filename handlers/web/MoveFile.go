@@ -14,14 +14,20 @@ type MoveFileRequest struct {
 	DestinationPath string `json:"destinationPath" binding:"required"`
 }
 
-func MoveFile(c *gin.Context) {
+func (h *WebHandler) MoveFile(c *gin.Context) {
+	id, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})
+		return
+	}
+
 	var req MoveFileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	s3Client := createTestClient()
+	s3Client := createTestClient(h, id.(int64))
 
 	filename := filepath.Base(req.SourceKey)
 	newKey := req.DestinationPath + filename

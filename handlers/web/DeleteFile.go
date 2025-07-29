@@ -12,14 +12,20 @@ type DeleteFileRequest struct {
 	Key    string `json:"key" binding:"required"`
 }
 
-func DeleteFile(c *gin.Context) {
+func (h *WebHandler) DeleteFile(c *gin.Context) {
+	id, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})
+		return
+	}
+
 	var req DeleteFileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	s3Client := createTestClient()
+	s3Client := createTestClient(h, id.(int64))
 
 	_, err := s3Client.DeleteObject(&s3.DeleteObjectInput{
 		Bucket: aws.String(req.Bucket),

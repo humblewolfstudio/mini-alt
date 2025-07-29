@@ -7,12 +7,18 @@ import (
 	"net/http"
 )
 
-func ListFolders(c *gin.Context) {
+func (h *WebHandler) ListFolders(c *gin.Context) {
+	id, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})
+		return
+	}
+
 	bucket := c.Query("bucket")
 	excludePrefix := c.Query("excludePrefix")
 	currentPath := c.Query("currentPath")
 
-	s3Client := createTestClient()
+	s3Client := createTestClient(h, id.(int64))
 
 	input := &s3.ListObjectsV2Input{
 		Bucket:    aws.String(bucket),

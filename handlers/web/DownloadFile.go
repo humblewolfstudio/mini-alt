@@ -9,11 +9,17 @@ import (
 	"path/filepath"
 )
 
-func DownloadFile(c *gin.Context) {
+func (h *WebHandler) DownloadFile(c *gin.Context) {
+	id, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})
+		return
+	}
+
 	bucket := c.Query("bucket")
 	key := c.Query("key")
 
-	s3Client := createTestClient()
+	s3Client := createTestClient(h, id.(int64))
 
 	resp, err := s3Client.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(bucket),

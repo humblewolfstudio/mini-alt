@@ -33,6 +33,8 @@ func WebAuthenticationMiddleware(h *web.WebHandler) gin.HandlerFunc {
 			return
 		}
 
+		c.Set("id", idInt64)
+
 		c.Next()
 	}
 }

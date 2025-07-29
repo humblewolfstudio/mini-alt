@@ -12,7 +12,13 @@ import (
 	"strings"
 )
 
-func UploadFiles(c *gin.Context) {
+func (h *WebHandler) UploadFiles(c *gin.Context) {
+	id, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})
+		return
+	}
+
 	bucket := c.PostForm("bucket")
 	prefix := c.PostForm("prefix")
 
@@ -37,7 +43,7 @@ func UploadFiles(c *gin.Context) {
 		return
 	}
 
-	s3Client := createTestClient()
+	s3Client := createTestClient(h, id.(int64))
 
 	for _, fileHeader := range files {
 		file, err := fileHeader.Open()

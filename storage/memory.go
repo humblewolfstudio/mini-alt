@@ -67,6 +67,7 @@ type User struct {
 	Username  string
 	Password  string
 	Token     string
+	AccessKey string
 	ExpiresAt *time.Time
 	CreatedAt time.Time
 }

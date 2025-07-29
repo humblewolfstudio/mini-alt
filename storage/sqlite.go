@@ -71,6 +71,7 @@ func (s *SQLiteStore) initSchema() error {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		access_key TEXT UNIQUE NOT NULL,
 		secret_key_encrypted TEXT NOT NULL,
+		user BOOLEAN NOT NULL,
 		expires_at DATE DEFAULT NULL,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
@@ -80,6 +81,7 @@ func (s *SQLiteStore) initSchema() error {
 	    username TEXT UNIQUE NOT NULL UNIQUE,
 	    password TEXT NOT NULL,
 	    token TEXT NOT NULL,
+		access_key TEXT NOT NULL,
 	    expires_at DATE DEFAULT NULL,
 	    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	)
@@ -235,7 +237,7 @@ func (s *SQLiteStore) DeleteBucket(bucket string) error {
 	return err
 }
 
-func (s *SQLiteStore) CreateCredentials(expiresAt string) (accessKey, secretKey string, err error) {
+func (s *SQLiteStore) CreateCredentials(expiresAt string, user bool) (accessKey, secretKey string, err error) {
 	accessKey = utils.GenerateRandomKey(16)
 	secretKey = utils.GenerateRandomKey(32)
 
@@ -251,7 +253,7 @@ func (s *SQLiteStore) CreateCredentials(expiresAt string) (accessKey, secretKey 
 		expiresAtValue = expiresAt
 	}
 
-	_, err = s.db.Exec(`INSERT INTO credentials (access_key, secret_key_encrypted, expires_at) VALUES (?, ?, ?)`, accessKey, encryptedSecret, expiresAtValue)
+	_, err = s.db.Exec(`INSERT INTO credentials (access_key, secret_key_encrypted, user, expires_at) VALUES (?, ?, ?, ?)`, accessKey, encryptedSecret, user, expiresAtValue)
 	if err != nil {
 		return "", "", err
 	}
@@ -270,7 +272,7 @@ func (s *SQLiteStore) GetSecretKey(accessKey string) (string, error) {
 }
 
 func (s *SQLiteStore) ListCredentials() ([]Credentials, error) {
-	rows, err := s.db.Query(`SELECT access_key, expires_at, created_at FROM credentials`)
+	rows, err := s.db.Query(`SELECT access_key, expires_at, created_at FROM credentials WHERE user = FALSE`)
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +307,7 @@ func (s *SQLiteStore) DeleteExpiredCredentials() {
 	}
 }
 
-func (s *SQLiteStore) RegisterUser(username, password, expiresAt string) error {
+func (s *SQLiteStore) RegisterUser(username, password, accessKey, expiresAt string) error {
 	hashedPassword, err := utils.HashPassword(password)
 	if err != nil {
 		return err
@@ -323,7 +325,7 @@ func (s *SQLiteStore) RegisterUser(username, password, expiresAt string) error {
 		expiresAtValue = expiresAt
 	}
 
-	_, err = s.db.Exec(`INSERT INTO users (username, password, token, expires_at) VALUES (?, ?, ?, ?);`, username, hashedPassword, hashedToken, expiresAtValue)
+	_, err = s.db.Exec(`INSERT INTO users (username, password, token, access_key, expires_at) VALUES (?, ?, ?, ?, ?);`, username, hashedPassword, hashedToken, accessKey, expiresAtValue)
 	if err != nil {
 		return err
 	}
@@ -343,10 +345,10 @@ func (s *SQLiteStore) GetUser(username string) (User, error) {
 }
 
 func (s *SQLiteStore) GetUserById(id int64) (User, error) {
-	row := s.db.QueryRow(`SELECT id, username, password, token, expires_at FROM users WHERE id = ?`, id)
+	row := s.db.QueryRow(`SELECT id, username, password, token, access_key, expires_at FROM users WHERE id = ?`, id)
 
 	var u User
-	if err := row.Scan(&u.Id, &u.Username, &u.Password, &u.Token, &u.ExpiresAt); err != nil {
+	if err := row.Scan(&u.Id, &u.Username, &u.Password, &u.Token, &u.AccessKey, &u.ExpiresAt); err != nil {
 		return User{}, err
 	}
 
@@ -423,7 +425,17 @@ func (s *SQLiteStore) ListUsers() ([]User, error) {
 }
 
 func (s *SQLiteStore) DeleteUser(id int64) error {
-	_, err := s.db.Exec(`DELETE FROM users WHERE id = ?`, id)
+	user, err := s.GetUserById(id)
+	if err != nil {
+		return err
+	}
+
+	err = s.DeleteCredentials(user.AccessKey)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.db.Exec(`DELETE FROM users WHERE id = ?`, id)
 	return err
 }
 

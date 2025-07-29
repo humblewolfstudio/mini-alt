@@ -16,7 +16,7 @@ func (h *WebHandler) CreateCredentials(c *gin.Context) {
 		return
 	}
 
-	accessKey, secretKey, err := h.Store.CreateCredentials(request.ExpiresAt)
+	accessKey, secretKey, err := h.Store.CreateCredentials(request.ExpiresAt, false)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

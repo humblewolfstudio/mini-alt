@@ -18,7 +18,13 @@ func (h *WebHandler) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	err := h.Store.RegisterUser(request.Username, request.Password, request.ExpiresAt)
+	accessKey, _, err := h.Store.CreateCredentials(request.ExpiresAt, true)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = h.Store.RegisterUser(request.Username, request.Password, accessKey, request.ExpiresAt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

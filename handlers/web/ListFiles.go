@@ -10,11 +10,17 @@ import (
 	"time"
 )
 
-func ListFiles(c *gin.Context) {
+func (h *WebHandler) ListFiles(c *gin.Context) {
+	id, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})
+		return
+	}
+
 	bucket := c.Query("bucket")
 	prefix := c.Query("prefix")
 
-	s3Client := createTestClient()
+	s3Client := createTestClient(h, id.(int64))
 
 	resp, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
 		Bucket:    aws.String(bucket),

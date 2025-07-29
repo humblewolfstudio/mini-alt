@@ -15,14 +15,20 @@ type CreateFolderRequest struct {
 	FolderName string `json:"folderName"`
 }
 
-func CreateFolder(c *gin.Context) {
+func (h *WebHandler) CreateFolder(c *gin.Context) {
+	id, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})
+		return
+	}
+
 	var req CreateFolderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	s3Client := createTestClient()
+	s3Client := createTestClient(h, id.(int64))
 
 	key := strings.TrimSuffix(req.Prefix, "/") + "/" + strings.TrimPrefix(req.FolderName, "/") + "/"
 

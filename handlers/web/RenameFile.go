@@ -13,14 +13,20 @@ type RenameFileRequest struct {
 	NewKey string `json:"newKey" binding:"required"`
 }
 
-func RenameFile(c *gin.Context) {
+func (h *WebHandler) RenameFile(c *gin.Context) {
+	id, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})
+		return
+	}
+
 	var req RenameFileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	s3Client := createTestClient()
+	s3Client := createTestClient(h, id.(int64))
 
 	_, err := s3Client.CopyObject(&s3.CopyObjectInput{
 		Bucket:     aws.String(req.Bucket),
