@@ -68,6 +68,7 @@ func (s *SQLiteStore) initSchema() error {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		access_key TEXT UNIQUE NOT NULL,
 		secret_key_encrypted TEXT NOT NULL,
+		expires_at DATE DEFAULT NULL,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 `
@@ -207,7 +208,7 @@ func (s *SQLiteStore) DeleteBucket(bucket string) error {
 	return err
 }
 
-func (s *SQLiteStore) CreateCredentials() (accessKey, secretKey string, err error) {
+func (s *SQLiteStore) CreateCredentials(expiresAt string) (accessKey, secretKey string, err error) {
 	accessKey = utils.GenerateRandomKey(16)
 	secretKey = utils.GenerateRandomKey(32)
 
@@ -216,7 +217,14 @@ func (s *SQLiteStore) CreateCredentials() (accessKey, secretKey string, err erro
 		return "", "", err
 	}
 
-	_, err = s.db.Exec(`INSERT INTO credentials (access_key, secret_key_encrypted) VALUES (?, ?)`, accessKey, encryptedSecret)
+	var expiresAtValue interface{}
+	if expiresAt == "" {
+		expiresAtValue = nil
+	} else {
+		expiresAtValue = expiresAt
+	}
+
+	_, err = s.db.Exec(`INSERT INTO credentials (access_key, secret_key_encrypted, expires_at) VALUES (?, ?, ?)`, accessKey, encryptedSecret, expiresAtValue)
 	if err != nil {
 		return "", "", err
 	}
@@ -235,7 +243,7 @@ func (s *SQLiteStore) GetSecretKey(accessKey string) (string, error) {
 }
 
 func (s *SQLiteStore) ListCredentials() ([]Credentials, error) {
-	rows, err := s.db.Query(`SELECT access_key, created_at FROM credentials`)
+	rows, err := s.db.Query(`SELECT access_key, expires_at, created_at FROM credentials`)
 	if err != nil {
 		return nil, err
 	}
@@ -243,17 +251,17 @@ func (s *SQLiteStore) ListCredentials() ([]Credentials, error) {
 		_ = rows.Close()
 	}(rows)
 
-	var creds []Credentials
+	var credentials []Credentials
 	for rows.Next() {
 		var c Credentials
-		if err := rows.Scan(&c.AccessKey, &c.CreatedAt); err != nil {
+		if err := rows.Scan(&c.AccessKey, &c.ExpiresAt, &c.CreatedAt); err != nil {
 			return nil, err
 		}
 
-		creds = append(creds, c)
+		credentials = append(credentials, c)
 	}
 
-	return creds, nil
+	return credentials, nil
 }
 
 func (s *SQLiteStore) DeleteCredentials(accessKey string) error {

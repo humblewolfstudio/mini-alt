@@ -2,6 +2,7 @@
 
 import {onMounted, ref} from "vue";
 import DeleteCredentialsModal from "../components/credentials/DeleteCredentialsModal.vue";
+import {getLocaleDate, getLocaleDateTime} from "../utils";
 
 const showDeleteModal = ref(false)
 
@@ -73,6 +74,7 @@ onMounted(() => {
           <thead>
           <tr>
             <th>Access Key</th>
+            <th>Expires</th>
             <th>Created</th>
             <th>Actions</th>
           </tr>
@@ -80,7 +82,8 @@ onMounted(() => {
           <tbody>
           <tr v-for="cred in credentials" :key="cred.Id">
             <td>{{cred.AccessKey}}</td>
-            <td>{{cred.CreatedAt}}</td>
+            <th>{{ cred.ExpiresAt ? getLocaleDate(cred.ExpiresAt) : 'Never' }}</th>
+            <td>{{ getLocaleDateTime(cred.CreatedAt) }}</td>
             <td>
               <button @click="promptDelete(cred.AccessKey)">Delete</button>
             </td>

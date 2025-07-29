@@ -7,6 +7,8 @@ const router = useRouter()
 const accessKey = ref('')
 const secretKey = ref('')
 
+const expiresAt = ref<string>('');
+
 const showCredentialsModal = ref(false)
 const isLoading = ref(false)
 const error = ref<string | null>(null)
@@ -18,7 +20,13 @@ const createCredentials = async () => {
       showCredentialsModal.value = false
 
       const res = await fetch('/api/credentials', {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          expiresAt: expiresAt.value ? new Date(expiresAt.value).toISOString() : null
+        })
       })
 
       const data = await res.json()
@@ -48,6 +56,17 @@ const createCredentials = async () => {
 
     <div class="form-container">
       <form @submit.prevent="createCredentials" class="form">
+        <div class="form-group">
+          <label for="expiresAt">Expiration Date (optional)</label>
+          <input
+              type="date"
+              id="expiresAt"
+              v-model="expiresAt"
+              :disabled="isLoading"
+          />
+          <p class="hint">Leave blank for no expiration.</p>
+        </div>
+        
         <div class="form-actions">
           <button type="submit" :disabled="isLoading">
             Create Credentials

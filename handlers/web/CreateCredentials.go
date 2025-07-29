@@ -5,8 +5,18 @@ import (
 	"net/http"
 )
 
+type CreateCredentialsRequest struct {
+	ExpiresAt string `json:"expiresAt"`
+}
+
 func (h *WebHandler) CreateCredentials(c *gin.Context) {
-	accessKey, secretKey, err := h.Store.CreateCredentials()
+	var request CreateCredentialsRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	accessKey, secretKey, err := h.Store.CreateCredentials(request.ExpiresAt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

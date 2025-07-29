@@ -14,8 +14,8 @@ func createTestClient() *s3.S3 {
 		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
 		Credentials: credentials.NewStaticCredentials(
-			"0JIZzAUcBOfKIxjA",
-			"G1EuwK4RKfL9cmUVuAMtvotxpTOXZDfn",
+			"mvarUw3Gf8U9PLNw",
+			"ZvnQfaz9ZeVT4SF3zttKgTI7rRciiQY8",
 			""),
 	}
 

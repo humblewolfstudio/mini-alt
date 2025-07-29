@@ -12,7 +12,7 @@ type Store interface {
 	GetBucket(bucket string) (Bucket, error)
 	DeleteObject(bucket, objectKey string) error
 	DeleteBucket(bucket string) error
-	CreateCredentials() (accessKey, secretKey string, err error)
+	CreateCredentials(expiresAt string) (accessKey, secretKey string, err error)
 	GetSecretKey(accessKey string) (string, error)
 	ListCredentials() ([]Credentials, error)
 	DeleteCredentials(accessKey string) error
