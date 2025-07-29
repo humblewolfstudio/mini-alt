@@ -34,7 +34,7 @@ func SetupWebRouter(store storage.Store) *gin.Engine {
 
 	apiGroup := r.Group("/api")
 	{
-		apiGroup.GET("/buckets", web.ListBuckets)
+		apiGroup.GET("/buckets", h.ListBuckets)
 		apiGroup.POST("/buckets", web.PutBucket)
 		apiGroup.GET("/files/list", web.ListFiles)
 		apiGroup.GET("/files/list-folders", web.ListFolders)

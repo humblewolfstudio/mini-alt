@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick } from "vue";
+import {formatSize} from "../../utils";
 
 const props = defineProps({
   item: {
@@ -37,14 +38,6 @@ const handleAction = (action: string) => {
       emit('move', props.item);
       break;
   }
-};
-
-const formatSize = (bytes: number) => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
 const formatDate = (dateString: string) => {

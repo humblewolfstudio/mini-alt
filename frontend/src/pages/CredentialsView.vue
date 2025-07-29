@@ -21,7 +21,7 @@ const fetchCredentials = async () => {
 
     if (res.ok) {
       const data = await res.json()
-      if (data) credentials.value = data.credentials
+      if (data) credentials.value = data
     }
   } catch (err) {
     console.error("Error fetcing credentials:", err)

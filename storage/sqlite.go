@@ -50,6 +50,8 @@ func (s *SQLiteStore) initSchema() error {
 		UNIQUE(bucket_name, key)
 	);
 
+	CREATE INDEX IF NOT EXISTS idx_objects_bucket_name ON objects(bucket_name);
+
 	CREATE TABLE IF NOT EXISTS object_metadata (
 	    id INTEGER PRIMARY KEY AUTOINCREMENT,
 	    object_id INTEGER NOT NULL,
@@ -154,7 +156,22 @@ func (s *SQLiteStore) ListObjects(bucket string) ([]Object, error) {
 }
 
 func (s *SQLiteStore) ListBuckets() ([]Bucket, error) {
-	rows, err := s.db.Query(`SELECT * FROM buckets`)
+	query := `
+		SELECT 
+			b.id,
+			b.name,
+			b.created_at,
+			IFNULL(COUNT(o.id), 0) as number_objects,
+			IFNULL(SUM(o.size), 0) as total_size
+		FROM 
+			buckets b
+		LEFT JOIN 
+			objects o ON o.bucket_name = b.name
+		GROUP BY 
+			b.id, b.name, b.created_at
+	`
+
+	rows, err := s.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +182,7 @@ func (s *SQLiteStore) ListBuckets() ([]Bucket, error) {
 	var buckets []Bucket
 	for rows.Next() {
 		var b Bucket
-		if err := rows.Scan(&b.Id, &b.Name, &b.CreatedAt); err != nil {
+		if err := rows.Scan(&b.Id, &b.Name, &b.CreatedAt, &b.NumberObjects, &b.Size); err != nil {
 			println(err.Error())
 			return nil, err
 		}

@@ -47,9 +47,11 @@ type ObjectMetadata struct {
 }
 
 type Bucket struct {
-	Id        int64
-	Name      string
-	CreatedAt time.Time
+	Id            int64
+	Name          string
+	NumberObjects int64
+	Size          int64
+	CreatedAt     time.Time
 }
 
 type Credentials struct {

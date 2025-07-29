@@ -12,5 +12,5 @@ func (h *WebHandler) ListCredentials(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"credentials": credentials})
+	c.JSON(http.StatusOK, credentials)
 }

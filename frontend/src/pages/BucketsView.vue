@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
+import {formatSize, getLocaleDateTime} from "../utils";
 
 const isLoading = ref(false);
 const buckets = ref([]);
@@ -42,6 +43,8 @@ onMounted(() => {
           <thead>
           <tr>
             <th>Name</th>
+            <th>Objects</th>
+            <th>Size</th>
             <th>Created</th>
             <th>Actions</th>
           </tr>
@@ -49,7 +52,9 @@ onMounted(() => {
           <tbody>
           <tr v-for="bucket in buckets" :key="bucket.Name">
             <td>{{ bucket.Name }}</td>
-            <td>{{bucket.CreationDate}}</td>
+            <td>{{ bucket.NumberObjects }}</td>
+            <td>{{ formatSize(bucket.Size) }}</td>
+            <td>{{getLocaleDateTime(bucket.CreatedAt)}}</td>
             <td>
               <RouterLink :to="'/buckets/' + bucket.Name">View</RouterLink>
             </td>

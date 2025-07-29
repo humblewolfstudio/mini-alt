@@ -22,7 +22,7 @@ func CalculateSignature(r *http.Request, parsed *ParsedAuth, secretKey, amzDate,
 
 	canonicalRequest := strings.Join([]string{
 		r.Method,
-		r.URL.EscapedPath(),
+		normalizePath(r.URL.EscapedPath()),
 		r.URL.RawQuery,
 		canonicalHeaders,
 		parsed.SignedHeaders,
@@ -71,4 +71,15 @@ func getSignatureKey(secret, date, region, service string) []byte {
 
 func normalizeHeaderValue(value string) string {
 	return strings.Join(strings.Fields(value), " ")
+}
+
+func normalizePath(path string) string {
+	if path == "" {
+		return "/"
+	}
+
+	if path != "/" && strings.HasSuffix(path, "/") {
+		path = strings.TrimSuffix(path, "/")
+	}
+	return path
 }
