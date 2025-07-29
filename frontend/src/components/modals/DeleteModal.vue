@@ -2,7 +2,7 @@
 import {ref} from "vue";
 
 defineProps({
-  accessKey: {
+  content: {
     type: String,
     default: ''
   }
@@ -32,7 +32,7 @@ const handleDelete = async () => {
       </div>
 
       <div class="modal-body">
-        <p>Are you sure you want to delete <strong>{{ accessKey }}</strong>?</p>
+        <p>Are you sure you want to delete <strong>{{ content }}</strong>?</p>
         <p class="warning">This action cannot be undone.</p>
       </div>
 

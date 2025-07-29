@@ -10,6 +10,8 @@ import BucketsView from "./pages/BucketsView.vue";
 import BucketDetailView from "./pages/BucketDetailView.vue";
 import CredentialsView from "./pages/CredentialsView.vue";
 import CredentialsCreateView from "./pages/CredentialsCreateView.vue";
+import UsersView from "./pages/UsersView.vue";
+import UsersCreateView from "./pages/UsersCreateView.vue";
 
 const routes = [
     { path: '/', component: HomeView },
@@ -18,6 +20,8 @@ const routes = [
     { path: '/buckets/:slug', component: BucketDetailView },
     { path: '/credentials', component: CredentialsView },
     { path: '/credentials/create-credentials', component: CredentialsCreateView },
+    { path: '/users', component: UsersView },
+    { path: '/users/create-users', component: UsersCreateView }
 ]
 
 const router = createRouter({

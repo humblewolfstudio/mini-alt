@@ -17,4 +17,12 @@ type Store interface {
 	ListCredentials() ([]Credentials, error)
 	DeleteCredentials(accessKey string) error
 	DeleteExpiredCredentials()
+	RegisterUser(username, password, expiresAt string) error
+	GetUser(username string) (User, error)
+	GetUserById(id int64) (User, error)
+	LoginUser(username, password string) (LoginResponse, error)
+	AuthenticateUser(id int64, token string) error
+	ListUsers() ([]User, error)
+	DeleteUser(id int64) error
+	DeleteExpiredUsers()
 }

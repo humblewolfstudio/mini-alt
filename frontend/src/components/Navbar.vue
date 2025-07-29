@@ -21,6 +21,11 @@ const allRoutes = [
     path: '/credentials',
     name: 'Credentials',
     icon: 'credentials'
+  },
+  {
+    path: '/users',
+    name: 'Users',
+    icon: 'users'
   }
 ];
 

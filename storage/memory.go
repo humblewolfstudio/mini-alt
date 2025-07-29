@@ -62,6 +62,15 @@ type Credentials struct {
 	CreatedAt time.Time
 }
 
+type User struct {
+	Id        int64
+	Username  string
+	Password  string
+	Token     string
+	ExpiresAt *time.Time
+	CreatedAt time.Time
+}
+
 type InMemoryStore struct {
 	mu      sync.Mutex
 	buckets map[string]map[string]Object
