@@ -332,7 +332,7 @@ func (s *SQLiteStore) RegisterUser(username, password, expiresAt string) error {
 }
 
 func (s *SQLiteStore) GetUser(username string) (User, error) {
-	row := s.db.QueryRow(`SELECT * FROM users WHERE username = ?`, username)
+	row := s.db.QueryRow(`SELECT id, username, password, token, expires_at FROM users WHERE username = ?`, username)
 
 	var u User
 	if err := row.Scan(&u.Id, &u.Username, &u.Password, &u.Token, &u.ExpiresAt); err != nil {
@@ -343,7 +343,7 @@ func (s *SQLiteStore) GetUser(username string) (User, error) {
 }
 
 func (s *SQLiteStore) GetUserById(id int64) (User, error) {
-	row := s.db.QueryRow(`SELECT * FROM users WHERE id = ?`, id)
+	row := s.db.QueryRow(`SELECT id, username, password, token, expires_at FROM users WHERE id = ?`, id)
 
 	var u User
 	if err := row.Scan(&u.Id, &u.Username, &u.Password, &u.Token, &u.ExpiresAt); err != nil {
@@ -359,17 +359,11 @@ type LoginResponse struct {
 }
 
 func (s *SQLiteStore) LoginUser(username, password string) (LoginResponse, error) {
-	hashedPassword, err := utils.HashPassword(password)
-	if err != nil {
-		return LoginResponse{}, err
-	}
-
 	user, err := s.GetUser(username)
 	if err != nil {
 		return LoginResponse{}, err
 	}
-
-	equal := utils.CheckPasswordHash(user.Password, hashedPassword)
+	equal := utils.CheckPasswordHash(password, user.Password)
 
 	if !equal {
 		return LoginResponse{}, errors.New("invalid password")

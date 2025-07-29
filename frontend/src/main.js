@@ -12,6 +12,7 @@ import CredentialsView from "./pages/CredentialsView.vue";
 import CredentialsCreateView from "./pages/CredentialsCreateView.vue";
 import UsersView from "./pages/UsersView.vue";
 import UsersCreateView from "./pages/UsersCreateView.vue";
+import LoginView from "./pages/LoginView.vue";
 
 const routes = [
     { path: '/', component: HomeView },
@@ -21,7 +22,8 @@ const routes = [
     { path: '/credentials', component: CredentialsView },
     { path: '/credentials/create-credentials', component: CredentialsCreateView },
     { path: '/users', component: UsersView },
-    { path: '/users/create-users', component: UsersCreateView }
+    { path: '/users/create-users', component: UsersCreateView },
+    { path: '/login', component: LoginView }
 ]
 
 const router = createRouter({

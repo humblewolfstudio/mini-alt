@@ -5,14 +5,14 @@ import (
 	"net/http"
 )
 
-type UserRequest struct {
+type UserRegisterRequest struct {
 	Username  string `json:"username"`
 	Password  string `json:"password"`
 	ExpiresAt string `json:"expiresAt"`
 }
 
 func (h *WebHandler) RegisterUser(c *gin.Context) {
-	var request UserRequest
+	var request UserRegisterRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

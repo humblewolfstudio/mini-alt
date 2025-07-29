@@ -31,8 +31,10 @@ func SetupWebRouter(store storage.Store) *gin.Engine {
 	r.Use(customLogger("WEB-SERVER"))
 
 	h := web.WebHandler{Store: store}
+	r.POST("/api/users/login", h.LoginUser)
 
 	apiGroup := r.Group("/api")
+	apiGroup.Use(middlewares.WebAuthenticationMiddleware(&h))
 	{
 		apiGroup.GET("/buckets", h.ListBuckets)
 		apiGroup.POST("/buckets", web.PutBucket)
@@ -52,6 +54,7 @@ func SetupWebRouter(store storage.Store) *gin.Engine {
 		apiGroup.GET("/users/list", h.ListUsers)
 		apiGroup.POST("/users/register", h.RegisterUser)
 		apiGroup.POST("/users/delete", h.DeleteUser)
+		apiGroup.GET("/users/authenticate", h.AuthenticateUser)
 	}
 
 	return r
