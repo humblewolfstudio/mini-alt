@@ -39,13 +39,15 @@ func main() {
 }
 
 func startDatabase() storage.Store {
-	exe, err := os.Executable()
+	configDir, err := storage.GetAppConfigDir()
 	if err != nil {
 		log.Fatal(err)
 	}
-	appDir := filepath.Dir(exe)
-	println("Starting server in ", appDir)
-	dbPath := filepath.Join(appDir, "mini-alt.sqlite")
+
+	parentDir := filepath.Dir(configDir)
+	println("Starting server in", parentDir)
+
+	dbPath := filepath.Join(configDir, "mini-alt.sqlite")
 	store, err := storage.NewSQLiteStore(dbPath)
 
 	if err != nil {
