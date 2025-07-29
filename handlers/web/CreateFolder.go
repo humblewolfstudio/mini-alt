@@ -15,7 +15,7 @@ type CreateFolderRequest struct {
 	FolderName string `json:"folderName"`
 }
 
-func (h *WebHandler) CreateFolder(c *gin.Context) {
+func (h *Handler) CreateFolder(c *gin.Context) {
 	id, exists := c.Get("id")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})

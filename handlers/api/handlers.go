@@ -4,6 +4,6 @@ import (
 	"mini-alt/storage"
 )
 
-type ApiHandler struct {
+type Handler struct {
 	Store storage.Store
 }

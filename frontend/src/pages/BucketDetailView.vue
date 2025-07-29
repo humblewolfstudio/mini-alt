@@ -142,12 +142,6 @@ const handleMove = async ({ destinationPath }: { destinationPath: string }) => {
   }
 }
 
-const refreshFiles = () => {
-  successMessage.value = ''
-  errorMessage.value = ''
-  fetchFiles()
-}
-
 onMounted(() => {
   fetchFiles()
 })

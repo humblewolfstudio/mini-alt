@@ -14,7 +14,7 @@ type MoveFileRequest struct {
 	DestinationPath string `json:"destinationPath" binding:"required"`
 }
 
-func (h *WebHandler) MoveFile(c *gin.Context) {
+func (h *Handler) MoveFile(c *gin.Context) {
 	id, exists := c.Get("id")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})

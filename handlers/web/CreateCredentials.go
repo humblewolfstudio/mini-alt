@@ -9,7 +9,7 @@ type CreateCredentialsRequest struct {
 	ExpiresAt string `json:"expiresAt"`
 }
 
-func (h *WebHandler) CreateCredentials(c *gin.Context) {
+func (h *Handler) CreateCredentials(c *gin.Context) {
 	var request CreateCredentialsRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

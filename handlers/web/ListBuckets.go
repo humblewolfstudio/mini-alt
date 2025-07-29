@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (h *WebHandler) ListBuckets(c *gin.Context) {
+func (h *Handler) ListBuckets(c *gin.Context) {
 	buckets, err := h.Store.ListBuckets()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

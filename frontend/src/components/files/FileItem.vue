@@ -44,7 +44,7 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString();
 };
 
-const toggleMenu = async (e: MouseEvent) => {
+const toggleMenu = async () => {
   isMenuOpen.value = !isMenuOpen.value;
 
   if (isMenuOpen.value && triggerRef.value) {

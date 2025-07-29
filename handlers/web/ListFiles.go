@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (h *WebHandler) ListFiles(c *gin.Context) {
+func (h *Handler) ListFiles(c *gin.Context) {
 	id, exists := c.Get("id")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})

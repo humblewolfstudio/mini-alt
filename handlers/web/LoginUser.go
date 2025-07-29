@@ -11,7 +11,7 @@ type UserLoginRequest struct {
 	Password string `json:"password"`
 }
 
-func (h *WebHandler) LoginUser(c *gin.Context) {
+func (h *Handler) LoginUser(c *gin.Context) {
 	var request UserLoginRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

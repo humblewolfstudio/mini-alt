@@ -30,7 +30,7 @@ const login = async () => {
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error || 'Login failed');
+      error.value = data.error || 'Login failed';
     }
 
     success.value = 'Logged in successfully!';

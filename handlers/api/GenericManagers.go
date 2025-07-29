@@ -5,7 +5,7 @@ import (
 )
 
 // GetObjectOrList receives the endpoint of getting an object or listing bucket objects (due to gin problem with * endpoints).
-func (h *ApiHandler) GetObjectOrList(c *gin.Context) {
+func (h *Handler) GetObjectOrList(c *gin.Context) {
 	bucket := c.Param("bucket")
 	object := c.Param("object")
 
@@ -20,7 +20,7 @@ func (h *ApiHandler) GetObjectOrList(c *gin.Context) {
 }
 
 // PutObjectOrBucket receives the endpoint of creating an object or a bucket (due to gin problem with * endpoints).
-func (h *ApiHandler) PutObjectOrBucket(c *gin.Context) {
+func (h *Handler) PutObjectOrBucket(c *gin.Context) {
 	bucket := c.Param("bucket")
 	object := c.Param("object")
 
@@ -39,7 +39,7 @@ func (h *ApiHandler) PutObjectOrBucket(c *gin.Context) {
 }
 
 // DeleteObjectOrBucket receives the endpoint of deleting an object or a bucket (due to gin problem with * endpoints).
-func (h *ApiHandler) DeleteObjectOrBucket(c *gin.Context) {
+func (h *Handler) DeleteObjectOrBucket(c *gin.Context) {
 	object := c.Param("object")
 
 	if object == "/" || object == "" {
@@ -51,7 +51,7 @@ func (h *ApiHandler) DeleteObjectOrBucket(c *gin.Context) {
 }
 
 // HeadObjectOrBucket receives the endpoint of returning the metadata of an object or a bucket.
-func (h *ApiHandler) HeadObjectOrBucket(c *gin.Context) {
+func (h *Handler) HeadObjectOrBucket(c *gin.Context) {
 	object := c.Param("object")
 
 	if object == "/" || object == "" {

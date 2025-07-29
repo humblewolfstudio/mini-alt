@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func (h *WebHandler) AuthenticateUser(c *gin.Context) {
+func (h *Handler) AuthenticateUser(c *gin.Context) {
 	id, err := c.Cookie("id")
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})

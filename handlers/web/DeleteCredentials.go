@@ -9,7 +9,7 @@ type DeleteCredentialsRequest struct {
 	AccessKey string `json:"accessKey"`
 }
 
-func (h *WebHandler) DeleteCredentials(c *gin.Context) {
+func (h *Handler) DeleteCredentials(c *gin.Context) {
 	var request DeleteCredentialsRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

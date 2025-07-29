@@ -44,7 +44,7 @@ const handleFileChange = async (event: Event) => {
     });
 
     if (!response.ok) {
-      throw new Error('Upload failed');
+      errorMessage.value = 'Upload failed';
     }
 
     successMessage.value = 'Files uploaded successfully!';

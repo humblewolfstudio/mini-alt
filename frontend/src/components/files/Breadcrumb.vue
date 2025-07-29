@@ -77,9 +77,4 @@ const pathParts = computed(() => {
 .breadcrumb-item:first-of-type {
   padding-left: 4px;
 }
-
-.breadcrumb-separator {
-  margin: 0 5px;
-  color: #95a5a6;
-}
 </style>

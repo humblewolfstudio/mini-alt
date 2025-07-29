@@ -8,7 +8,7 @@ import (
 	"mini-alt/storage"
 )
 
-func createTestClient(h *WebHandler, id int64) *s3.S3 {
+func createTestClient(h *Handler, id int64) *s3.S3 {
 	creds, err := getCredentials(h, id)
 	if err != nil {
 		return nil
@@ -37,7 +37,7 @@ type FileItem struct {
 	IsFolder     bool   `json:"isFolder"`
 }
 
-func getCredentials(h *WebHandler, id int64) (storage.Credentials, error) {
+func getCredentials(h *Handler, id int64) (storage.Credentials, error) {
 	user, err := h.Store.GetUserById(id)
 	if err != nil {
 		return storage.Credentials{}, err

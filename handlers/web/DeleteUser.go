@@ -9,7 +9,7 @@ type DeleteUserRequest struct {
 	Id int64 `json:"id"`
 }
 
-func (h *WebHandler) DeleteUser(c *gin.Context) {
+func (h *Handler) DeleteUser(c *gin.Context) {
 	var request DeleteUserRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

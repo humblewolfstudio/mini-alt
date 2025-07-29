@@ -13,7 +13,7 @@ const MaxObjects = 1000
 
 // ListObjectsV2 returns a list of x objects in a bucket.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html
-func (h *ApiHandler) ListObjectsV2(c *gin.Context, bucket string) {
+func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 	objects, err := h.Store.ListObjects(bucket)
 	if err != nil {
 		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchBucket", "The specified bucket does not exist.", bucket)

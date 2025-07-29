@@ -4,6 +4,6 @@ import (
 	"mini-alt/storage"
 )
 
-type WebHandler struct {
+type Handler struct {
 	Store storage.Store
 }

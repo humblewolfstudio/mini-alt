@@ -11,7 +11,7 @@ type BucketRequest struct {
 	Name string `json:"name" binding:"required"`
 }
 
-func (h *WebHandler) PutBucket(c *gin.Context) {
+func (h *Handler) PutBucket(c *gin.Context) {
 	id, exists := c.Get("id")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})

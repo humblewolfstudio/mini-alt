@@ -5,14 +5,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gin-gonic/gin"
-	"mime/multipart"
 	"net/http"
 	"path"
 	"path/filepath"
 	"strings"
 )
 
-func (h *WebHandler) UploadFiles(c *gin.Context) {
+func (h *Handler) UploadFiles(c *gin.Context) {
 	id, exists := c.Get("id")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})
@@ -51,12 +50,6 @@ func (h *WebHandler) UploadFiles(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		defer func(file multipart.File) {
-			err := file.Close()
-			if err != nil {
-
-			}
-		}(file)
 
 		filename := filepath.Base(fileHeader.Filename)
 		sanitizedFilename := strings.ReplaceAll(filename, " ", "_")
@@ -75,6 +68,8 @@ func (h *WebHandler) UploadFiles(c *gin.Context) {
 			Key:    aws.String(key),
 			Body:   file,
 		})
+
+		_ = file.Close()
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{

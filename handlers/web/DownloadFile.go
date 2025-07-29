@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-func (h *WebHandler) DownloadFile(c *gin.Context) {
+func (h *Handler) DownloadFile(c *gin.Context) {
 	id, exists := c.Get("id")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})
@@ -29,7 +29,9 @@ func (h *WebHandler) DownloadFile(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
 
 	c.Header("Content-Disposition", "attachment; filename=\""+filepath.Base(key)+"\"")
 	if resp.ContentType != nil {
@@ -42,7 +44,7 @@ func (h *WebHandler) DownloadFile(c *gin.Context) {
 
 	_, err = io.Copy(c.Writer, resp.Body)
 	if err != nil {
-		c.Error(err)
+		_ = c.Error(err)
 		c.Abort()
 		return
 	}

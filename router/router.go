@@ -13,7 +13,7 @@ func SetupAPIRouter(store storage.Store) *gin.Engine {
 	r := gin.New()
 	r.Use(customLogger("API-SERVER"))
 
-	h := api.ApiHandler{Store: store}
+	h := api.Handler{Store: store}
 
 	r.Use(middlewares.APIAuthenticationMiddleware(&h))
 
@@ -30,7 +30,7 @@ func SetupWebRouter(store storage.Store) *gin.Engine {
 	r := gin.New()
 	r.Use(customLogger("WEB-SERVER"))
 
-	h := web.WebHandler{Store: store}
+	h := web.Handler{Store: store}
 	r.POST("/api/users/login", h.LoginUser)
 
 	apiGroup := r.Group("/api")

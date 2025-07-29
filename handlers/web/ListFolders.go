@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (h *WebHandler) ListFolders(c *gin.Context) {
+func (h *Handler) ListFolders(c *gin.Context) {
 	id, exists := c.Get("id")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})

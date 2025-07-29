@@ -161,10 +161,4 @@ const isActive = (navItem: any) => {
   background-color: #42b983;
   font-weight: bold;
 }
-
-.bottom {
-  margin-top: auto;
-  margin-bottom: 20px;
-}
-
 </style>

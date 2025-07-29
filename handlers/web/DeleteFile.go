@@ -12,7 +12,7 @@ type DeleteFileRequest struct {
 	Key    string `json:"key" binding:"required"`
 }
 
-func (h *WebHandler) DeleteFile(c *gin.Context) {
+func (h *Handler) DeleteFile(c *gin.Context) {
 	id, exists := c.Get("id")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})

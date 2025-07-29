@@ -13,7 +13,7 @@ type RenameFileRequest struct {
 	NewKey string `json:"newKey" binding:"required"`
 }
 
-func (h *WebHandler) RenameFile(c *gin.Context) {
+func (h *Handler) RenameFile(c *gin.Context) {
 	id, exists := c.Get("id")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})

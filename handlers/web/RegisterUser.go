@@ -11,7 +11,7 @@ type UserRegisterRequest struct {
 	ExpiresAt string `json:"expiresAt"`
 }
 
-func (h *WebHandler) RegisterUser(c *gin.Context) {
+func (h *Handler) RegisterUser(c *gin.Context) {
 	var request UserRegisterRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

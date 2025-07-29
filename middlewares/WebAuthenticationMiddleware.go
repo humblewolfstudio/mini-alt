@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-func WebAuthenticationMiddleware(h *web.WebHandler) gin.HandlerFunc {
+func WebAuthenticationMiddleware(h *web.Handler) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := c.Cookie("id")
 		if err != nil {

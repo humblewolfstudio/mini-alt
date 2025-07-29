@@ -29,30 +29,6 @@ func GetBucketsDir() (string, error) {
 	return filepath.Join(appSupportDir, "data"), nil
 }
 
-// EnsureDirectories creates all required directories if they don't exist
-func EnsureDirectories() error {
-	appSupportDir, err := GetAppSupportDir()
-	if err != nil {
-		return err
-	}
-
-	// Create application support directory if it doesn't exist
-	if err := os.MkdirAll(appSupportDir, 0755); err != nil {
-		return fmt.Errorf("failed to create application support directory: %w", err)
-	}
-
-	// Create buckets directory
-	bucketsDir, err := GetBucketsDir()
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(bucketsDir, 0755); err != nil {
-		return fmt.Errorf("failed to create buckets directory: %w", err)
-	}
-
-	return nil
-}
-
 func CreateBucketDirectory(bucketName string) error {
 	bucketsDir, err := GetBucketsDir()
 	if err != nil {
@@ -147,7 +123,9 @@ func GetMD5Base64(path string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 
 	hash := md5.New()
 	if _, err := io.Copy(hash, file); err != nil {
