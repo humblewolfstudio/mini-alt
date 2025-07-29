@@ -6,31 +6,12 @@ import (
 	"time"
 )
 
-type ChecksumAlgorithm string
-
-const (
-	CRC32     ChecksumAlgorithm = "CRC32"
-	CRC32C                      = "CRC32C"
-	SHA1                        = "SHA1"
-	SHA256                      = "SHA256"
-	CRC64NVME                   = "CRC64NVME"
-)
-
-type ChecksumType string
-
-const (
-	COMPOSITE   ChecksumType = "COMPOSITE"
-	FULL_OBJECT              = "FULL_OBJECT"
-)
-
 type Object struct {
-	Id                int64
-	ChecksumAlgorithm []ChecksumAlgorithm
-	ChecksumType      ChecksumType
-	ETag              string
-	Key               string
-	LastModified      time.Time
-	Size              int64
+	Id           int64
+	ETag         string
+	Key          string
+	LastModified time.Time
+	Size         int64
 }
 
 type ObjectMetadata struct {
@@ -47,8 +28,28 @@ type ObjectMetadata struct {
 }
 
 type Bucket struct {
+	Id            int64
+	Name          string
+	NumberObjects int64
+	Size          int64
+	CreatedAt     time.Time
+}
+
+type Credentials struct {
 	Id        int64
-	Name      string
+	AccessKey string
+	SecretKey string
+	ExpiresAt *time.Time
+	CreatedAt time.Time
+}
+
+type User struct {
+	Id        int64
+	Username  string
+	Password  string
+	Token     string
+	AccessKey string
+	ExpiresAt *time.Time
 	CreatedAt time.Time
 }
 
@@ -56,13 +57,6 @@ type InMemoryStore struct {
 	mu      sync.Mutex
 	buckets map[string]map[string]Object
 	meta    map[string]Bucket
-}
-
-func NewInMemoryStore() *InMemoryStore {
-	return &InMemoryStore{
-		buckets: make(map[string]map[string]Object),
-		meta:    make(map[string]Bucket),
-	}
 }
 
 func (s *InMemoryStore) PutBucket(bucket string) error {

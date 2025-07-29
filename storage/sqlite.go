@@ -3,7 +3,9 @@ package storage
 import (
 	"database/sql"
 	"errors"
+	"log"
 	"mini-alt/types"
+	"mini-alt/utils"
 	"time"
 )
 
@@ -48,6 +50,8 @@ func (s *SQLiteStore) initSchema() error {
 		UNIQUE(bucket_name, key)
 	);
 
+	CREATE INDEX IF NOT EXISTS idx_objects_bucket_name ON objects(bucket_name);
+
 	CREATE TABLE IF NOT EXISTS object_metadata (
 	    id INTEGER PRIMARY KEY AUTOINCREMENT,
 	    object_id INTEGER NOT NULL,
@@ -62,6 +66,25 @@ func (s *SQLiteStore) initSchema() error {
 	    expires DATETIME,
 	    FOREIGN KEY(object_id) REFERENCES objects(id) ON DELETE CASCADE
 	);
+
+	CREATE TABLE IF NOT EXISTS  credentials (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		access_key TEXT UNIQUE NOT NULL,
+		secret_key_encrypted TEXT NOT NULL,
+		user BOOLEAN NOT NULL,
+		expires_at DATE DEFAULT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE TABLE IF NOT EXISTS users (
+	    id INTEGER PRIMARY KEY AUTOINCREMENT,
+	    username TEXT UNIQUE NOT NULL UNIQUE,
+	    password TEXT NOT NULL,
+	    token TEXT NOT NULL,
+		access_key TEXT NOT NULL,
+	    expires_at DATE DEFAULT NULL,
+	    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)
 `
 	_, err := s.db.Exec(schema)
 	return err
@@ -144,7 +167,22 @@ func (s *SQLiteStore) ListObjects(bucket string) ([]Object, error) {
 }
 
 func (s *SQLiteStore) ListBuckets() ([]Bucket, error) {
-	rows, err := s.db.Query(`SELECT * FROM buckets`)
+	query := `
+		SELECT 
+			b.id,
+			b.name,
+			b.created_at,
+			IFNULL(COUNT(o.id), 0) as number_objects,
+			IFNULL(SUM(o.size), 0) as total_size
+		FROM 
+			buckets b
+		LEFT JOIN 
+			objects o ON o.bucket_name = b.name
+		GROUP BY 
+			b.id, b.name, b.created_at
+	`
+
+	rows, err := s.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +193,7 @@ func (s *SQLiteStore) ListBuckets() ([]Bucket, error) {
 	var buckets []Bucket
 	for rows.Next() {
 		var b Bucket
-		if err := rows.Scan(&b.Id, &b.Name, &b.CreatedAt); err != nil {
+		if err := rows.Scan(&b.Id, &b.Name, &b.CreatedAt, &b.NumberObjects, &b.Size); err != nil {
 			println(err.Error())
 			return nil, err
 		}
@@ -181,7 +219,7 @@ func (s *SQLiteStore) GetBucket(bucket string) (Bucket, error) {
 	row := s.db.QueryRow(`SELECT * FROM buckets WHERE name = ?`, bucket)
 	var b Bucket
 	b.Name = bucket
-	if err := row.Scan(&b.Name, &b.CreatedAt); err != nil {
+	if err := row.Scan(&b.Id, &b.Name, &b.CreatedAt); err != nil {
 		return Bucket{}, err
 	}
 
@@ -189,11 +227,223 @@ func (s *SQLiteStore) GetBucket(bucket string) (Bucket, error) {
 }
 
 func (s *SQLiteStore) DeleteObject(bucket, key string) error {
-	_, err := s.db.Exec(`DELETE FROM objects WHERE bucket_name = ? AND key = ?`, bucket, key)
+	prefix := key + "%"
+	_, err := s.db.Exec(`DELETE FROM objects WHERE bucket_name = ? AND key LIKE ? ESCAPE '\'`, bucket, prefix)
 	return err
 }
 
 func (s *SQLiteStore) DeleteBucket(bucket string) error {
 	_, err := s.db.Exec(`DELETE FROM buckets WHERE name = ?`, bucket)
 	return err
+}
+
+func (s *SQLiteStore) CreateCredentials(expiresAt string, user bool) (accessKey, secretKey string, err error) {
+	accessKey = utils.GenerateRandomKey(16)
+	secretKey = utils.GenerateRandomKey(32)
+
+	encryptedSecret, err := utils.Encrypt(secretKey)
+	if err != nil {
+		return "", "", err
+	}
+
+	var expiresAtValue interface{}
+	if expiresAt == "" {
+		expiresAtValue = nil
+	} else {
+		expiresAtValue = expiresAt
+	}
+
+	_, err = s.db.Exec(`INSERT INTO credentials (access_key, secret_key_encrypted, user, expires_at) VALUES (?, ?, ?, ?)`, accessKey, encryptedSecret, user, expiresAtValue)
+	if err != nil {
+		return "", "", err
+	}
+
+	return accessKey, secretKey, nil
+}
+
+func (s *SQLiteStore) GetSecretKey(accessKey string) (string, error) {
+	row := s.db.QueryRow(`SELECT secret_key_encrypted FROM credentials WHERE access_key = ?`, accessKey)
+	var encrypted string
+	if err := row.Scan(&encrypted); err != nil {
+		return "", err
+	}
+
+	return utils.Decrypt(encrypted)
+}
+
+func (s *SQLiteStore) ListCredentials() ([]Credentials, error) {
+	rows, err := s.db.Query(`SELECT access_key, expires_at, created_at FROM credentials WHERE user = FALSE`)
+	if err != nil {
+		return nil, err
+	}
+	defer func(rows *sql.Rows) {
+		_ = rows.Close()
+	}(rows)
+
+	var credentials []Credentials
+	for rows.Next() {
+		var c Credentials
+		if err := rows.Scan(&c.AccessKey, &c.ExpiresAt, &c.CreatedAt); err != nil {
+			return nil, err
+		}
+
+		credentials = append(credentials, c)
+	}
+
+	return credentials, nil
+}
+
+func (s *SQLiteStore) DeleteCredentials(accessKey string) error {
+	_, err := s.db.Exec(`DELETE FROM credentials WHERE access_key = ?`, accessKey)
+	return err
+}
+
+func (s *SQLiteStore) DeleteExpiredCredentials() {
+	_, err := s.db.Exec(`DELETE FROM credentials WHERE expires_at IS NOT NULL AND DATE(expires_at) < DATE('now');`)
+	if err != nil {
+		log.Printf("Failed to delete expired credentials: %v", err)
+	} else {
+		log.Println("Expired credentials deleted.")
+	}
+}
+
+func (s *SQLiteStore) RegisterUser(username, password, accessKey, expiresAt string) error {
+	hashedPassword, err := utils.HashPassword(password)
+	if err != nil {
+		return err
+	}
+	token := utils.GenerateRandomKey(32)
+	hashedToken, err := utils.HashPassword(token)
+	if err != nil {
+		return err
+	}
+
+	var expiresAtValue interface{}
+	if expiresAt == "" {
+		expiresAtValue = nil
+	} else {
+		expiresAtValue = expiresAt
+	}
+
+	_, err = s.db.Exec(`INSERT INTO users (username, password, token, access_key, expires_at) VALUES (?, ?, ?, ?, ?);`, username, hashedPassword, hashedToken, accessKey, expiresAtValue)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *SQLiteStore) GetUser(username string) (User, error) {
+	row := s.db.QueryRow(`SELECT id, username, password, token, expires_at FROM users WHERE username = ?`, username)
+
+	var u User
+	if err := row.Scan(&u.Id, &u.Username, &u.Password, &u.Token, &u.ExpiresAt); err != nil {
+		return User{}, err
+	}
+
+	return u, nil
+}
+
+func (s *SQLiteStore) GetUserById(id int64) (User, error) {
+	row := s.db.QueryRow(`SELECT id, username, password, token, access_key, expires_at FROM users WHERE id = ?`, id)
+
+	var u User
+	if err := row.Scan(&u.Id, &u.Username, &u.Password, &u.Token, &u.AccessKey, &u.ExpiresAt); err != nil {
+		return User{}, err
+	}
+
+	return u, nil
+}
+
+type LoginResponse struct {
+	Id    int64
+	Token string
+}
+
+func (s *SQLiteStore) LoginUser(username, password string) (LoginResponse, error) {
+	user, err := s.GetUser(username)
+	if err != nil {
+		return LoginResponse{}, err
+	}
+	equal := utils.CheckPasswordHash(password, user.Password)
+
+	if !equal {
+		return LoginResponse{}, errors.New("invalid password")
+	}
+
+	token := utils.GenerateRandomKey(32)
+	hashedToken, err := utils.HashPassword(token)
+	if err != nil {
+		return LoginResponse{}, err
+	}
+
+	_, err = s.db.Exec(`UPDATE users SET token = ? WHERE username = ?`, hashedToken, username)
+	if err != nil {
+		return LoginResponse{}, err
+	}
+
+	return LoginResponse{Id: user.Id, Token: token}, nil
+}
+
+func (s *SQLiteStore) AuthenticateUser(id int64, token string) error {
+	user, err := s.GetUserById(id)
+	if err != nil {
+		return err
+	}
+
+	equal := utils.CheckPasswordHash(token, user.Token)
+
+	if !equal {
+		return errors.New("invalid token")
+	}
+
+	return nil
+}
+
+func (s *SQLiteStore) ListUsers() ([]User, error) {
+	rows, err := s.db.Query(`SELECT id, username, expires_at FROM users`)
+	if err != nil {
+		return nil, err
+	}
+
+	var users []User
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.Id, &u.Username, &u.ExpiresAt); err != nil {
+			return nil, err
+		}
+
+		users = append(users, u)
+	}
+
+	err = rows.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func (s *SQLiteStore) DeleteUser(id int64) error {
+	user, err := s.GetUserById(id)
+	if err != nil {
+		return err
+	}
+
+	err = s.DeleteCredentials(user.AccessKey)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.db.Exec(`DELETE FROM users WHERE id = ?`, id)
+	return err
+}
+
+func (s *SQLiteStore) DeleteExpiredUsers() {
+	_, err := s.db.Exec(`DELETE FROM users WHERE expires_at IS NOT NULL AND DATE(expires_at) < DATE('now');`)
+	if err != nil {
+		log.Printf("Failed to delete expired users: %v", err)
+	} else {
+		log.Println("Expired users deleted.")
+	}
 }

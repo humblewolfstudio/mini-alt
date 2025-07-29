@@ -147,6 +147,18 @@ func TestListObjects(t *testing.T) {
 	}
 }
 
+func TestHeadBucket(t *testing.T) {
+	s3Client := createTestClient()
+
+	_, err := s3Client.HeadBucket(&s3.HeadBucketInput{
+		Bucket: aws.String("test-bucket"),
+	})
+
+	if err != nil {
+		t.Fatalf("HeadBucket failed: %v", err)
+	}
+}
+
 func TestDeleteBucket(t *testing.T) {
 	s3Client := createTestClient()
 

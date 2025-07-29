@@ -4,10 +4,12 @@ import (
 	"embed"
 	"flag"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 	"io"
 	"io/fs"
 	"log"
+	"mini-alt/crons"
 	"mini-alt/router"
 	"mini-alt/storage"
 	"net/http"
@@ -23,29 +25,47 @@ func main() {
 	noWeb := flag.Bool("no-web", false, "Disable web interface")
 	flag.Parse()
 
+	loadEnv()
+	store := startDatabase()
+	crons.StartupCronJobs(store)
+
 	if *noWeb {
-		startApiServer()
+		startApiServer(store)
 		println("Starting without web interface")
 	} else {
-		go startApiServer()
-		startWebServer()
+		go startApiServer(store)
+		startWebServer(store)
 	}
 }
 
-func startApiServer() {
+func startDatabase() storage.Store {
 	exe, err := os.Executable()
 	if err != nil {
 		log.Fatal(err)
 	}
 	appDir := filepath.Dir(exe)
-
+	println("Starting server in ", appDir)
 	dbPath := filepath.Join(appDir, "mini-alt.sqlite")
 	store, err := storage.NewSQLiteStore(dbPath)
 
 	if err != nil {
 		log.Fatal(err)
-		return
+		return nil
 	}
+
+	return store
+}
+
+func loadEnv() {
+	if os.Getenv("APP_ENV") != "production" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Println("Warning: Error loading .env file - relying on system environment variables")
+		}
+	}
+}
+
+func startApiServer(store storage.Store) {
 
 	r := router.SetupAPIRouter(store)
 
@@ -54,8 +74,8 @@ func startApiServer() {
 	}
 }
 
-func startWebServer() {
-	r := router.SetupWebRouter()
+func startWebServer(store storage.Store) {
+	r := router.SetupWebRouter(store)
 
 	fsys, err := fs.Sub(embeddedFiles, "frontend/dist")
 	if err != nil {

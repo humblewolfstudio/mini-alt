@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"crypto/md5"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -27,30 +29,6 @@ func GetBucketsDir() (string, error) {
 	return filepath.Join(appSupportDir, "data"), nil
 }
 
-// EnsureDirectories creates all required directories if they don't exist
-func EnsureDirectories() error {
-	appSupportDir, err := GetAppSupportDir()
-	if err != nil {
-		return err
-	}
-
-	// Create application support directory if it doesn't exist
-	if err := os.MkdirAll(appSupportDir, 0755); err != nil {
-		return fmt.Errorf("failed to create application support directory: %w", err)
-	}
-
-	// Create buckets directory
-	bucketsDir, err := GetBucketsDir()
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(bucketsDir, 0755); err != nil {
-		return fmt.Errorf("failed to create buckets directory: %w", err)
-	}
-
-	return nil
-}
-
 func CreateBucketDirectory(bucketName string) error {
 	bucketsDir, err := GetBucketsDir()
 	if err != nil {
@@ -69,27 +47,54 @@ func DeleteObjectFile(bucketName, objectKey string) error {
 		return err
 	}
 	path := filepath.Join(bucketsDir, bucketName, objectKey)
-	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+	if err := os.RemoveAll(path); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("failed to delete object file: %w", err)
 	}
 	return nil
 }
 
 func CreateObjectFilePath(bucketName, objectKey string) (string, error) {
+	if strings.Contains(objectKey, "..") || filepath.IsAbs(objectKey) {
+		return "", fmt.Errorf("invalid object key: %s", objectKey)
+	}
+
+	cleanedKey := filepath.Clean(objectKey)
 	bucketsDir, err := GetBucketsDir()
 	if err != nil {
 		return "", err
 	}
-	fullPath := filepath.Join(bucketsDir, bucketName, objectKey)
+
+	fullPath := filepath.Join(bucketsDir, bucketName, cleanedKey)
+	bucketRoot := filepath.Join(bucketsDir, bucketName)
+
+	if !strings.HasPrefix(fullPath, bucketRoot) {
+		return "", fmt.Errorf("object key escapes bucket path: %s", objectKey)
+	}
+
 	dir := filepath.Dir(fullPath)
+
+	if info, err := os.Stat(dir); err == nil && !info.IsDir() {
+		if err := os.Remove(dir); err != nil {
+			return "", fmt.Errorf("cannot convert file to directory: %w", err)
+		}
+	}
+
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		return "", fmt.Errorf("failed to create object path directories: %w", err)
 	}
+
 	return fullPath, nil
 }
 
 func CreateObject(path string, src io.Reader) (int64, error) {
 	dir := filepath.Dir(path)
+
+	if info, err := os.Stat(dir); err == nil && !info.IsDir() {
+		if err := os.Remove(dir); err != nil {
+			return 0, fmt.Errorf("cannot convert file to directory: %w", err)
+		}
+	}
+
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return 0, fmt.Errorf("failed to create object directory: %w", err)
 	}
@@ -111,6 +116,24 @@ func CreateObject(path string, src io.Reader) (int64, error) {
 	}
 
 	return written, nil
+}
+
+func GetMD5Base64(path string) (string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return "", fmt.Errorf("failed to open file: %w", err)
+	}
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
+
+	hash := md5.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		return "", fmt.Errorf("failed to hash object: %w", err)
+	}
+
+	hashSum := hash.Sum(nil)
+	return base64.StdEncoding.EncodeToString(hashSum), nil
 }
 
 func GetObjectPath(bucketName, objectKey string) (string, error) {

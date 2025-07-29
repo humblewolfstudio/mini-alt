@@ -16,7 +16,7 @@
 - ListObjectsV2 [x]
 - HeadObject []
 
-## Build for MacOS
+## Build for macOS
 ```bash
 GOOS=darwin GOARCH=arm64 go build -o build/mini-alt-arm .
 GOOS=darwin GOARCH=amd64 go build -o build/mini-alt-amd .

@@ -3,8 +3,9 @@ package router
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"mini-alt/handlers"
+	"mini-alt/handlers/api"
 	"mini-alt/handlers/web"
+	"mini-alt/middlewares"
 	"mini-alt/storage"
 )
 
@@ -12,24 +13,48 @@ func SetupAPIRouter(store storage.Store) *gin.Engine {
 	r := gin.New()
 	r.Use(customLogger("API-SERVER"))
 
-	h := handlers.Handler{Store: store}
+	h := api.Handler{Store: store}
+
+	r.Use(middlewares.APIAuthenticationMiddleware(&h))
 
 	r.GET("/", h.ListBuckets)
 	r.PUT("/:bucket/*object", h.PutObjectOrBucket)
 	r.GET("/:bucket/*object", h.GetObjectOrList)
-	r.HEAD("/:bucket/*object", h.HeadObject)
+	r.HEAD("/:bucket/*object", h.HeadObjectOrBucket)
 	r.DELETE("/:bucket/*object", h.DeleteObjectOrBucket)
 
 	return r
 }
 
-func SetupWebRouter() *gin.Engine {
+func SetupWebRouter(store storage.Store) *gin.Engine {
 	r := gin.New()
 	r.Use(customLogger("WEB-SERVER"))
 
-	api := r.Group("/api")
+	h := web.Handler{Store: store}
+	r.POST("/api/users/login", h.LoginUser)
+
+	apiGroup := r.Group("/api")
+	apiGroup.Use(middlewares.WebAuthenticationMiddleware(&h))
 	{
-		api.GET("/buckets", web.ListBuckets)
+		apiGroup.GET("/buckets", h.ListBuckets)
+		apiGroup.POST("/buckets", h.PutBucket)
+		apiGroup.GET("/files/list", h.ListFiles)
+		apiGroup.GET("/files/list-folders", h.ListFolders)
+		apiGroup.GET("/files/download", h.DownloadFile)
+		apiGroup.POST("/files/upload", h.UploadFiles)
+		apiGroup.POST("/files/create-folder", h.CreateFolder)
+		apiGroup.POST("/files/delete", h.DeleteFile)
+		apiGroup.PUT("/files/rename", h.RenameFile)
+		apiGroup.PUT("/files/move", h.MoveFile)
+
+		apiGroup.GET("/credentials", h.ListCredentials)
+		apiGroup.POST("/credentials", h.CreateCredentials)
+		apiGroup.POST("/credentials/delete", h.DeleteCredentials)
+
+		apiGroup.GET("/users/list", h.ListUsers)
+		apiGroup.POST("/users/register", h.RegisterUser)
+		apiGroup.POST("/users/delete", h.DeleteUser)
+		apiGroup.GET("/users/authenticate", h.AuthenticateUser)
 	}
 
 	return r

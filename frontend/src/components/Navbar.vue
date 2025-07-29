@@ -1,9 +1,10 @@
 <script setup lang="ts">
-
 import {computed, ref} from "vue";
+import { useRoute } from 'vue-router';
 
 const isCollapsed = ref(false)
 const isAdmin = ref(true);
+const route = useRoute();
 
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
@@ -11,6 +12,21 @@ const toggleCollapse = () => {
 
 const allRoutes = [
   { path: '/', name: 'Home', icon: 'home' },
+  {
+    path: '/buckets',
+    name: 'Buckets',
+    icon: 'buckets'
+  },
+  {
+    path: '/credentials',
+    name: 'Credentials',
+    icon: 'credentials'
+  },
+  {
+    path: '/users',
+    name: 'Users',
+    icon: 'users'
+  }
 ];
 
 const filteredRoutes = computed(() => {
@@ -19,7 +35,13 @@ const filteredRoutes = computed(() => {
       : allRoutes.filter(route => route.path === '/');
 });
 
-
+const isActive = (navItem: any) => {
+  if (navItem.path.includes(':')) {
+    const regex = new RegExp('^' + navItem.path.replace(/:[^/]+/g, '[^/]+') + '($|/)');
+    return regex.test(route.path);
+  }
+  return route.path === navItem.path || route.path.startsWith(navItem.path + '/');
+};
 </script>
 
 <template>
@@ -29,24 +51,20 @@ const filteredRoutes = computed(() => {
     </button>
 
     <nav class="navbar">
-      <RouterLink v-for="route in filteredRoutes" :key="route.path" :to="route.path" class="nav-link">
+      <RouterLink
+          v-for="route in filteredRoutes"
+          :key="route.path"
+          :to="route.path"
+          class="nav-link"
+          :class="{ 'router-link-exact-active': isActive(route) }"
+      >
         <div class="icon-container">
-          <img class="nav-icon" :src="'/' + route.icon + '.svg'" width="25" height="25" />
+          <img class="nav-icon" :src="'/icons/' + route.icon + '.svg'" width="25" height="25"  :alt="route.name"/>
         </div>
         <div class="text-container">
           <span class="nav-text">{{ route.name }}</span>
         </div>
       </RouterLink>
-      <!--
-      <router-link to="/logout" class="nav-link bottom">
-        <div class="icon-container">
-          <img class="nav-icon" src="/icons/logout.svg" width="25" height="25" />
-        </div>
-        <div class="text-container">
-          <span class="nav-text">LogOut</span>
-        </div>
-      </router-link>
-      -->
     </nav>
   </div>
 </template>
@@ -143,10 +161,4 @@ const filteredRoutes = computed(() => {
   background-color: #42b983;
   font-weight: bold;
 }
-
-.bottom {
-  margin-top: auto;
-  margin-bottom: 20px;
-}
-
 </style>
