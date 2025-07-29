@@ -16,4 +16,5 @@ type Store interface {
 	GetSecretKey(accessKey string) (string, error)
 	ListCredentials() ([]Credentials, error)
 	DeleteCredentials(accessKey string) error
+	DeleteExpiredCredentials()
 }

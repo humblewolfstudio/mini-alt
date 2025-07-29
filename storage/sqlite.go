@@ -3,6 +3,7 @@ package storage
 import (
 	"database/sql"
 	"errors"
+	"log"
 	"mini-alt/types"
 	"mini-alt/utils"
 	"time"
@@ -267,4 +268,13 @@ func (s *SQLiteStore) ListCredentials() ([]Credentials, error) {
 func (s *SQLiteStore) DeleteCredentials(accessKey string) error {
 	_, err := s.db.Exec(`DELETE FROM credentials WHERE access_key = ?`, accessKey)
 	return err
+}
+
+func (s *SQLiteStore) DeleteExpiredCredentials() {
+	_, err := s.db.Exec(`DELETE FROM credentials WHERE expires_at IS NOT NULL AND DATE(expires_at) < DATE('now');`)
+	if err != nil {
+		log.Printf("Failed to delete expired credentials: %v", err)
+	} else {
+		log.Println("Expired credentials deleted.")
+	}
 }

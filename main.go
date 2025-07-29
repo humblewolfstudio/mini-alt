@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/fs"
 	"log"
+	"mini-alt/crons"
 	"mini-alt/router"
 	"mini-alt/storage"
 	"net/http"
@@ -26,6 +27,7 @@ func main() {
 
 	loadEnv()
 	store := startDatabase()
+	crons.StartupCronJobs(store)
 
 	if *noWeb {
 		startApiServer(store)
