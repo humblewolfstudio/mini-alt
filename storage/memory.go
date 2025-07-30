@@ -36,11 +36,14 @@ type Bucket struct {
 }
 
 type Credentials struct {
-	Id        int64
-	AccessKey string
-	SecretKey string
-	ExpiresAt *time.Time
-	CreatedAt time.Time
+	Id          int64
+	AccessKey   string
+	SecretKey   string
+	ExpiresAt   *time.Time
+	Status      bool
+	Name        *string
+	Description *string
+	CreatedAt   time.Time
 }
 
 type User struct {

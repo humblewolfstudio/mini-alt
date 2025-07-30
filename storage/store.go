@@ -12,7 +12,8 @@ type Store interface {
 	GetBucket(bucket string) (Bucket, error)
 	DeleteObject(bucket, objectKey string) error
 	DeleteBucket(bucket string) error
-	CreateCredentials(expiresAt string, user bool) (accessKey, secretKey string, err error)
+	CreateCredentials(name, description, expiresAt string, user bool) (accessKey, secretKey string, err error)
+	EditCredentials(accessKey string, name, description, expiresAt string, status bool) error
 	GetSecretKey(accessKey string) (string, error)
 	ListCredentials() ([]Credentials, error)
 	DeleteCredentials(accessKey string) error

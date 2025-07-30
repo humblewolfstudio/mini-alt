@@ -77,6 +77,9 @@ func (s *SQLiteStore) initSchema() error {
 		secret_key_encrypted TEXT NOT NULL,
 		user BOOLEAN NOT NULL,
 		expires_at DATE DEFAULT NULL,
+		status BOOLEAN NOT NULL DEFAULT TRUE,
+		name TEXT,
+		description TEXT,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 
@@ -104,7 +107,7 @@ func (s *SQLiteStore) SeedInitialData() error {
 	if count > 0 {
 		return nil
 	}
-	accessKey, _, err := s.CreateCredentials("", true)
+	accessKey, _, err := s.CreateCredentials("", "", "", true)
 	if err != nil {
 		return err
 	}
@@ -265,7 +268,7 @@ func (s *SQLiteStore) DeleteBucket(bucket string) error {
 	return err
 }
 
-func (s *SQLiteStore) CreateCredentials(expiresAt string, user bool) (accessKey, secretKey string, err error) {
+func (s *SQLiteStore) CreateCredentials(name, description, expiresAt string, user bool) (accessKey, secretKey string, err error) {
 	accessKey = utils.GenerateRandomKey(16)
 	secretKey = utils.GenerateRandomKey(32)
 
@@ -281,12 +284,24 @@ func (s *SQLiteStore) CreateCredentials(expiresAt string, user bool) (accessKey,
 		expiresAtValue = expiresAt
 	}
 
-	_, err = s.db.Exec(`INSERT INTO credentials (access_key, secret_key_encrypted, user, expires_at) VALUES (?, ?, ?, ?)`, accessKey, encryptedSecret, user, expiresAtValue)
+	_, err = s.db.Exec(`INSERT INTO credentials (access_key, secret_key_encrypted, user, expires_at, name, description) VALUES (?, ?, ?, ?, ?, ?)`, accessKey, encryptedSecret, user, expiresAtValue, name, description)
 	if err != nil {
 		return "", "", err
 	}
 
 	return accessKey, secretKey, nil
+}
+
+func (s *SQLiteStore) EditCredentials(accessKey string, name, description, expiresAt string, status bool) error {
+	var expiresAtValue interface{}
+	if expiresAt == "" {
+		expiresAtValue = nil
+	} else {
+		expiresAtValue = expiresAt
+	}
+
+	_, err := s.db.Exec(`UPDATE credentials SET expires_at = ?, status = ?, name = ?, description = ? WHERE access_key = ?`, expiresAtValue, status, name, description, accessKey)
+	return err
 }
 
 func (s *SQLiteStore) GetSecretKey(accessKey string) (string, error) {
@@ -300,7 +315,7 @@ func (s *SQLiteStore) GetSecretKey(accessKey string) (string, error) {
 }
 
 func (s *SQLiteStore) ListCredentials() ([]Credentials, error) {
-	rows, err := s.db.Query(`SELECT access_key, expires_at, created_at FROM credentials WHERE user = FALSE`)
+	rows, err := s.db.Query(`SELECT access_key, expires_at, created_at, status, name, description FROM credentials WHERE user = FALSE`)
 	if err != nil {
 		return nil, err
 	}
@@ -311,7 +326,7 @@ func (s *SQLiteStore) ListCredentials() ([]Credentials, error) {
 	var credentials []Credentials
 	for rows.Next() {
 		var c Credentials
-		if err := rows.Scan(&c.AccessKey, &c.ExpiresAt, &c.CreatedAt); err != nil {
+		if err := rows.Scan(&c.AccessKey, &c.ExpiresAt, &c.CreatedAt, &c.Status, &c.Name, &c.Description); err != nil {
 			return nil, err
 		}
 

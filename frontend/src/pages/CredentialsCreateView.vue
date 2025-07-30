@@ -7,6 +7,8 @@ const router = useRouter()
 const accessKey = ref('')
 const secretKey = ref('')
 
+const name = ref('')
+const description = ref('')
 const expiresAt = ref<string>('');
 
 const showCredentialsModal = ref(false)
@@ -25,7 +27,9 @@ const createCredentials = async () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          expiresAt: expiresAt.value ? new Date(expiresAt.value).toISOString() : null
+          expiresAt: expiresAt.value ? new Date(expiresAt.value).toISOString() : null,
+          name: name.value,
+          description: description.value
         })
       })
 
@@ -56,6 +60,28 @@ const createCredentials = async () => {
 
     <div class="form-container">
       <form @submit.prevent="createCredentials" class="form">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input
+              id="name"
+              v-model="name"
+              type="text"
+              placeholder="Credentials name"
+              :disabled="isLoading"
+          />
+          <p class="hint">The name for the credentials is optional.</p>
+        </div>
+        <div class="form-group">
+          <label for="description">Description</label>
+          <input
+              id="description"
+              v-model="description"
+              type="text"
+              placeholder="Credentials description"
+              :disabled="isLoading"
+          />
+          <p class="hint">The description for the credentials is optional.</p>
+        </div>
         <div class="form-group">
           <label for="expiresAt">Expiration Date (optional)</label>
           <input
