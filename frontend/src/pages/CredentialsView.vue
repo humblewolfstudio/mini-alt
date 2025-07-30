@@ -2,7 +2,7 @@
 
 import {onMounted, ref} from "vue";
 import DeleteModal from "../components/modals/DeleteModal.vue";
-import {getLocaleDate, getLocaleDateTime} from "../utils";
+import {getLocaleDate} from "../utils";
 import EditCredentialsModal from "../components/credentials/EditCredentialsModal.vue";
 
 const showDeleteModal = ref(false)
