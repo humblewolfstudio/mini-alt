@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import {onMounted, ref} from "vue";
-import {getLocaleDate} from "../utils";
+import {getLocaleDate, getLocaleDateTime} from "../utils";
 import DeleteModal from "../components/modals/DeleteModal.vue";
 
 const showDeleteModal = ref(false)
@@ -77,6 +77,7 @@ onMounted(() => {
         <tr>
           <th>Username</th>
           <th>Expires</th>
+          <th>Created</th>
           <th>Actions</th>
         </tr>
         </thead>
@@ -84,6 +85,7 @@ onMounted(() => {
         <tr v-for="user in users">
           <td>{{user.Username}}</td>
           <td>{{user.ExpiresAt ? getLocaleDate(user.ExpiresAt) : 'Never'}}</td>
+          <td>{{ getLocaleDateTime(user.CreatedAt)}}</td>
           <td>
             <button @click="promptDelete(user.Username)">Delete</button>
           </td>

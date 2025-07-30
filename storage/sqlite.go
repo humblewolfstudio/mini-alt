@@ -429,7 +429,7 @@ func (s *SQLiteStore) AuthenticateUser(id int64, token string) error {
 }
 
 func (s *SQLiteStore) ListUsers() ([]User, error) {
-	rows, err := s.db.Query(`SELECT id, username, expires_at FROM users`)
+	rows, err := s.db.Query(`SELECT id, username, expires_at, created_at FROM users`)
 	if err != nil {
 		return nil, err
 	}
@@ -437,7 +437,7 @@ func (s *SQLiteStore) ListUsers() ([]User, error) {
 	var users []User
 	for rows.Next() {
 		var u User
-		if err := rows.Scan(&u.Id, &u.Username, &u.ExpiresAt); err != nil {
+		if err := rows.Scan(&u.Id, &u.Username, &u.ExpiresAt, &u.CreatedAt); err != nil {
 			return nil, err
 		}
 
