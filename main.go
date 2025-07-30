@@ -91,6 +91,11 @@ func startWebServer(store storage.Store) {
 		fileServer.ServeHTTP(c.Writer, c.Request)
 	})
 
+	r.GET("/icons/*filepath", func(c *gin.Context) {
+		c.Request.URL.Path = "/icons" + c.Param("filepath")
+		fileServer.ServeHTTP(c.Writer, c.Request)
+	})
+
 	r.GET("/vite.svg", func(c *gin.Context) {
 		c.Request.URL.Path = "/vite.svg"
 		fileServer.ServeHTTP(c.Writer, c.Request)

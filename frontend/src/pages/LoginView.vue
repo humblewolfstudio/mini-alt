@@ -31,6 +31,7 @@ const login = async () => {
 
     if (!res.ok) {
       error.value = data.error || 'Login failed';
+      return
     }
 
     success.value = 'Logged in successfully!';

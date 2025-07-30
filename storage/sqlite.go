@@ -3,6 +3,7 @@ package storage
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"mini-alt/types"
 	"mini-alt/utils"
@@ -26,6 +27,9 @@ func NewSQLiteStore(dbPath string) (*SQLiteStore, error) {
 
 	store := &SQLiteStore{db: db}
 	if err := store.initSchema(); err != nil {
+		return nil, err
+	}
+	if err := store.SeedInitialData(); err != nil {
 		return nil, err
 	}
 
@@ -88,6 +92,30 @@ func (s *SQLiteStore) initSchema() error {
 `
 	_, err := s.db.Exec(schema)
 	return err
+}
+
+func (s *SQLiteStore) SeedInitialData() error {
+	var count int
+	err := s.db.QueryRow(`SELECT COUNT(*) FROM users`).Scan(&count)
+	if err != nil {
+		return fmt.Errorf("failed to count users: %w", err)
+	}
+
+	if count > 0 {
+		return nil
+	}
+	accessKey, _, err := s.CreateCredentials("", true)
+	if err != nil {
+		return err
+	}
+
+	err = s.RegisterUser("admin", "admin", accessKey, "")
+
+	if err != nil {
+		return fmt.Errorf("failed to insert default user: %w", err)
+	}
+
+	return nil
 }
 
 func (s *SQLiteStore) PutObject(bucket, object string, size int64) (Object, error) {
