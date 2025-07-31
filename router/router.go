@@ -6,10 +6,10 @@ import (
 	"mini-alt/handlers/api"
 	"mini-alt/handlers/web"
 	"mini-alt/middlewares"
-	"mini-alt/storage"
+	"mini-alt/storage/db"
 )
 
-func SetupAPIRouter(store storage.Store) *gin.Engine {
+func SetupAPIRouter(store *db.Store) *gin.Engine {
 	r := gin.New()
 	r.Use(customLogger("API-SERVER"))
 
@@ -26,7 +26,7 @@ func SetupAPIRouter(store storage.Store) *gin.Engine {
 	return r
 }
 
-func SetupWebRouter(store storage.Store) *gin.Engine {
+func SetupWebRouter(store *db.Store) *gin.Engine {
 	r := gin.New()
 	r.Use(customLogger("WEB-SERVER"))
 

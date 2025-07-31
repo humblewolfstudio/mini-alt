@@ -1,9 +1,9 @@
 package api
 
 import (
-	"mini-alt/storage"
+	"mini-alt/storage/db"
 )
 
 type Handler struct {
-	Store storage.Store
+	Store *db.Store
 }

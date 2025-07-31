@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"mini-alt/storage"
+	"mini-alt/storage/disk"
 	"mini-alt/utils"
 	"net/http"
 )
@@ -12,7 +12,7 @@ import (
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteBucket.html
 func (h *Handler) DeleteBucket(c *gin.Context) {
 	bucketName := c.Param("bucket")
-	if err := storage.DeleteBucket(bucketName); err != nil {
+	if err := disk.DeleteBucket(bucketName); err != nil {
 		utils.RespondS3Error(c, http.StatusInternalServerError, "InternalError", "Could not delete bucket", bucketName)
 		return
 	}

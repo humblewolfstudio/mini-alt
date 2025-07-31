@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"mini-alt/encoding"
-	"mini-alt/storage"
+	"mini-alt/storage/disk"
 	"mini-alt/utils"
 	"net/http"
 	"strings"
@@ -23,21 +23,24 @@ func (h *Handler) CopyObject(c *gin.Context, bucketName, objectKey, copySource s
 	srcObjectKey := parts[1]
 	objectKey = strings.TrimPrefix(objectKey, "/")
 
-	srcFile, err := storage.GetObject(srcBucketName, srcObjectKey)
+	srcFile, err := disk.GetObject(srcBucketName, srcObjectKey)
 	if err != nil {
 		utils.RespondS3Error(c, http.StatusNotFound, "ObjectNotFound", "Could not find the Object.", srcBucketName)
+		return
 	}
 
-	endPath, err := storage.GetObjectPath(bucketName, objectKey)
+	endPath, err := disk.GetObjectPath(bucketName, objectKey)
 
-	written, err := storage.CreateObject(endPath, srcFile)
+	written, err := disk.CreateObject(endPath, srcFile)
 	if err != nil {
 		utils.RespondS3Error(c, http.StatusInternalServerError, "CouldNotWrite", "Could not write the Object.", bucketName)
+		return
 	}
 
 	object, err := h.Store.PutObject(bucketName, objectKey, written)
 	if err != nil {
 		utils.RespondS3Error(c, http.StatusInternalServerError, "CouldNotWrite", "Could not write the Object.", bucketName)
+		return
 	}
 
 	var xmlCopyObjectResult encoding.CopyObjectResult
