@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"mini-alt/models"
 	"mini-alt/types"
 	"mini-alt/utils"
 	"time"
@@ -121,7 +122,7 @@ func (s *SQLiteStore) SeedInitialData() error {
 	return nil
 }
 
-func (s *SQLiteStore) PutObject(bucket, object string, size int64) (Object, error) {
+func (s *SQLiteStore) PutObject(bucket, object string, size int64) (models.Object, error) {
 	now := time.Now()
 	row := s.db.QueryRow(`
 	INSERT INTO objects(bucket_name, key, size, last_modified)
@@ -133,10 +134,10 @@ func (s *SQLiteStore) PutObject(bucket, object string, size int64) (Object, erro
 
 	var id int64
 	if err := row.Scan(&id); err != nil {
-		return Object{}, err
+		return models.Object{}, err
 	}
 
-	return Object{Id: id, Key: object, Size: size, LastModified: now}, nil
+	return models.Object{Id: id, Key: object, Size: size, LastModified: now}, nil
 }
 
 func (s *SQLiteStore) PutBucket(bucket string) error {
@@ -177,7 +178,7 @@ func (s *SQLiteStore) PutMetadata(objectId int64, metadata types.Metadata) error
 	return err
 }
 
-func (s *SQLiteStore) ListObjects(bucket string) ([]Object, error) {
+func (s *SQLiteStore) ListObjects(bucket string) ([]models.Object, error) {
 	rows, err := s.db.Query(`SELECT key, size, last_modified FROM objects WHERE bucket_name = ?`, bucket)
 	if err != nil {
 		return nil, err
@@ -186,9 +187,9 @@ func (s *SQLiteStore) ListObjects(bucket string) ([]Object, error) {
 		_ = rows.Close()
 	}(rows)
 
-	var objs []Object
+	var objs []models.Object
 	for rows.Next() {
-		var o Object
+		var o models.Object
 		if err := rows.Scan(&o.Key, &o.Size, &o.LastModified); err != nil {
 			return nil, err
 		}
@@ -197,7 +198,7 @@ func (s *SQLiteStore) ListObjects(bucket string) ([]Object, error) {
 	return objs, nil
 }
 
-func (s *SQLiteStore) ListBuckets() ([]Bucket, error) {
+func (s *SQLiteStore) ListBuckets() ([]models.Bucket, error) {
 	query := `
 		SELECT 
 			b.id,
@@ -221,9 +222,9 @@ func (s *SQLiteStore) ListBuckets() ([]Bucket, error) {
 		_ = rows.Close()
 	}(rows)
 
-	var buckets []Bucket
+	var buckets []models.Bucket
 	for rows.Next() {
-		var b Bucket
+		var b models.Bucket
 		if err := rows.Scan(&b.Id, &b.Name, &b.CreatedAt, &b.NumberObjects, &b.Size); err != nil {
 			println(err.Error())
 			return nil, err
@@ -233,25 +234,25 @@ func (s *SQLiteStore) ListBuckets() ([]Bucket, error) {
 	return buckets, nil
 }
 
-func (s *SQLiteStore) GetObject(bucket, key string) (Object, error) {
+func (s *SQLiteStore) GetObject(bucket, key string) (models.Object, error) {
 	row := s.db.QueryRow(`
 		SELECT key, size, last_modified FROM objects WHERE bucket_name = ? AND key = ?`,
 		bucket, key)
 
-	var obj Object
+	var obj models.Object
 	obj.Key = key
 	if err := row.Scan(&obj.Key, &obj.Size, &obj.LastModified); err != nil {
-		return Object{}, errors.New("object not found")
+		return models.Object{}, errors.New("object not found")
 	}
 	return obj, nil
 }
 
-func (s *SQLiteStore) GetBucket(bucket string) (Bucket, error) {
+func (s *SQLiteStore) GetBucket(bucket string) (models.Bucket, error) {
 	row := s.db.QueryRow(`SELECT * FROM buckets WHERE name = ?`, bucket)
-	var b Bucket
+	var b models.Bucket
 	b.Name = bucket
 	if err := row.Scan(&b.Id, &b.Name, &b.CreatedAt); err != nil {
-		return Bucket{}, err
+		return models.Bucket{}, err
 	}
 
 	return b, nil
@@ -314,7 +315,7 @@ func (s *SQLiteStore) GetSecretKey(accessKey string) (string, error) {
 	return utils.Decrypt(encrypted)
 }
 
-func (s *SQLiteStore) ListCredentials() ([]Credentials, error) {
+func (s *SQLiteStore) ListCredentials() ([]models.Credentials, error) {
 	rows, err := s.db.Query(`SELECT access_key, expires_at, created_at, status, name, description FROM credentials WHERE user = FALSE`)
 	if err != nil {
 		return nil, err
@@ -323,9 +324,9 @@ func (s *SQLiteStore) ListCredentials() ([]Credentials, error) {
 		_ = rows.Close()
 	}(rows)
 
-	var credentials []Credentials
+	var credentials []models.Credentials
 	for rows.Next() {
-		var c Credentials
+		var c models.Credentials
 		if err := rows.Scan(&c.AccessKey, &c.ExpiresAt, &c.CreatedAt, &c.Status, &c.Name, &c.Description); err != nil {
 			return nil, err
 		}
@@ -376,23 +377,23 @@ func (s *SQLiteStore) RegisterUser(username, password, accessKey, expiresAt stri
 	return nil
 }
 
-func (s *SQLiteStore) GetUser(username string) (User, error) {
+func (s *SQLiteStore) GetUser(username string) (models.User, error) {
 	row := s.db.QueryRow(`SELECT id, username, password, token, expires_at FROM users WHERE username = ?`, username)
 
-	var u User
+	var u models.User
 	if err := row.Scan(&u.Id, &u.Username, &u.Password, &u.Token, &u.ExpiresAt); err != nil {
-		return User{}, err
+		return models.User{}, err
 	}
 
 	return u, nil
 }
 
-func (s *SQLiteStore) GetUserById(id int64) (User, error) {
+func (s *SQLiteStore) GetUserById(id int64) (models.User, error) {
 	row := s.db.QueryRow(`SELECT id, username, password, token, access_key, expires_at FROM users WHERE id = ?`, id)
 
-	var u User
+	var u models.User
 	if err := row.Scan(&u.Id, &u.Username, &u.Password, &u.Token, &u.AccessKey, &u.ExpiresAt); err != nil {
-		return User{}, err
+		return models.User{}, err
 	}
 
 	return u, nil
@@ -443,15 +444,15 @@ func (s *SQLiteStore) AuthenticateUser(id int64, token string) error {
 	return nil
 }
 
-func (s *SQLiteStore) ListUsers() ([]User, error) {
+func (s *SQLiteStore) ListUsers() ([]models.User, error) {
 	rows, err := s.db.Query(`SELECT id, username, expires_at, created_at FROM users`)
 	if err != nil {
 		return nil, err
 	}
 
-	var users []User
+	var users []models.User
 	for rows.Next() {
-		var u User
+		var u models.User
 		if err := rows.Scan(&u.Id, &u.Username, &u.ExpiresAt, &u.CreatedAt); err != nil {
 			return nil, err
 		}
