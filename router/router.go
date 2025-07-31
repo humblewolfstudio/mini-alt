@@ -11,6 +11,7 @@ import (
 
 func SetupAPIRouter(store *db.Store) *gin.Engine {
 	r := gin.New()
+	r.RedirectTrailingSlash = false
 	r.Use(customLogger("API-SERVER"))
 
 	h := api.Handler{Store: store}
@@ -19,6 +20,7 @@ func SetupAPIRouter(store *db.Store) *gin.Engine {
 
 	r.GET("/", h.ListBuckets)
 	r.PUT("/:bucket/*object", h.PutObjectOrBucket)
+	r.GET("/:bucket", h.GetObjectOrList)
 	r.GET("/:bucket/*object", h.GetObjectOrList)
 	r.HEAD("/:bucket/*object", h.HeadObjectOrBucket)
 	r.DELETE("/:bucket/*object", h.DeleteObjectOrBucket)
