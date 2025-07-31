@@ -6,10 +6,10 @@ import (
 	"mini-alt/handlers/api"
 	"mini-alt/handlers/web"
 	"mini-alt/middlewares"
-	"mini-alt/storage"
+	"mini-alt/storage/db"
 )
 
-func SetupAPIRouter(store storage.Store) *gin.Engine {
+func SetupAPIRouter(store *db.Store) *gin.Engine {
 	r := gin.New()
 	r.Use(customLogger("API-SERVER"))
 
@@ -26,7 +26,7 @@ func SetupAPIRouter(store storage.Store) *gin.Engine {
 	return r
 }
 
-func SetupWebRouter(store storage.Store) *gin.Engine {
+func SetupWebRouter(store *db.Store) *gin.Engine {
 	r := gin.New()
 	r.Use(customLogger("WEB-SERVER"))
 
@@ -50,11 +50,14 @@ func SetupWebRouter(store storage.Store) *gin.Engine {
 		apiGroup.GET("/credentials", h.ListCredentials)
 		apiGroup.POST("/credentials", h.CreateCredentials)
 		apiGroup.POST("/credentials/delete", h.DeleteCredentials)
+		apiGroup.POST("/credentials/edit", h.CredentialsEdit)
 
 		apiGroup.GET("/users/list", h.ListUsers)
 		apiGroup.POST("/users/register", h.RegisterUser)
 		apiGroup.POST("/users/delete", h.DeleteUser)
 		apiGroup.GET("/users/authenticate", h.AuthenticateUser)
+
+		apiGroup.GET("/users/logout", h.LogoutUser)
 	}
 
 	return r

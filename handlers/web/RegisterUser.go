@@ -18,7 +18,7 @@ func (h *Handler) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	accessKey, _, err := h.Store.CreateCredentials(request.ExpiresAt, true)
+	accessKey, _, err := h.Store.CreateCredentials("", "", request.ExpiresAt, true)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

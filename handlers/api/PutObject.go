@@ -3,7 +3,7 @@ package api
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"mini-alt/storage"
+	"mini-alt/storage/disk"
 	"mini-alt/types"
 	"mini-alt/utils"
 	"net/http"
@@ -73,7 +73,7 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 		_ = h.Store.PutBucket(bucketName)
 	}
 
-	path, err := storage.CreateObjectFilePath(bucketName, objectKey)
+	path, err := disk.CreateObjectFilePath(bucketName, objectKey)
 	if err != nil {
 		HandleError(c, InvalidRequest, bucketName, "Could not create objectKey path")
 		return
@@ -84,7 +84,7 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 	if putObjectRequest.IfMatch != "" {
 		existingObject, err := h.Store.GetObject(bucketName, objectKey)
 		if err == nil {
-			etag, err := storage.GetMD5Base64(existingObject.Key)
+			etag, err := disk.GetMD5Base64(existingObject.Key)
 			if err == nil && etag != putObjectRequest.IfMatch {
 				c.Header("ETag", etag)
 				HandleError(c, PreconditionFailed, bucketName, "At least one of the preconditions you specified did not hold.")
@@ -96,7 +96,7 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 	if putObjectRequest.IfNoneMatch != "" {
 		existingObject, err := h.Store.GetObject(bucketName, objectKey)
 		if err == nil {
-			etag, err := storage.GetMD5Base64(existingObject.Key)
+			etag, err := disk.GetMD5Base64(existingObject.Key)
 			if err == nil && etag == putObjectRequest.IfNoneMatch {
 				c.Header("ETag", etag)
 				HandleError(c, PreconditionFailed, bucketName, "An object already exists with the same ETag.")
@@ -105,7 +105,7 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 		}
 	}
 
-	written, err := storage.CreateObject(path, c.Request.Body)
+	written, err := disk.CreateObject(path, c.Request.Body)
 	if err != nil {
 		HandleError(c, InvalidRequest, bucketName, "Could not write object")
 		return
@@ -117,7 +117,7 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 		return
 	}
 
-	md5, err := storage.GetMD5Base64(path)
+	md5, err := disk.GetMD5Base64(path)
 	if err == nil {
 		if md5 == putObjectRequest.ContentMD5 {
 			fmt.Printf("Object integrity verified for %s", path)

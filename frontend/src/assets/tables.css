@@ -104,11 +104,11 @@ h1 {
 /* Spinner styles */
 .spinner-container {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
     gap: 1rem;
+    padding: 12px 15px;
 }
 
 .spinner {

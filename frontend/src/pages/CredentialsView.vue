@@ -2,9 +2,12 @@
 
 import {onMounted, ref} from "vue";
 import DeleteModal from "../components/modals/DeleteModal.vue";
-import {getLocaleDate, getLocaleDateTime} from "../utils";
+import {getLocaleDate} from "../utils";
+import EditCredentialsModal from "../components/credentials/EditCredentialsModal.vue";
 
 const showDeleteModal = ref(false)
+const showEditModal = ref(false)
+const data = ref<any | null>(null)
 
 const selectedAccessKey = ref('')
 
@@ -36,6 +39,12 @@ const promptDelete = (accessKey: string) => {
   showDeleteModal.value = true
 }
 
+const promptEdit = (accessKey: string, editData: any) => {
+  selectedAccessKey.value = accessKey
+  showEditModal.value = true
+  data.value = editData
+}
+
 const handleDelete = async () => {
   if (selectedAccessKey.value === '') return
 
@@ -53,6 +62,30 @@ const handleDelete = async () => {
     error.value = `Failed to delete ${selectedAccessKey.value}`
   } finally {
     showDeleteModal.value = false
+  }
+}
+
+const handleEdit = async (data: any) => {
+  if (selectedAccessKey.value === '') return
+
+  try {
+    await fetch('/api/credentials/edit', {
+      method: 'POST',
+      body: JSON.stringify({
+        accessKey: selectedAccessKey.value,
+        name: data.name,
+        description: data.description,
+        status: data.status,
+        expiresAt: data.expiresAt
+      })
+    })
+
+    selectedAccessKey.value = ''
+    await fetchCredentials()
+  } catch (err) {
+    error.value = `Failed to edit ${selectedAccessKey.value}`
+  } finally {
+    showEditModal.value = false
   }
 }
 
@@ -75,17 +108,22 @@ onMounted(() => {
           <tr>
             <th>Access Key</th>
             <th>Expires</th>
-            <th>Created</th>
+            <th>Status</th>
+            <th>Name</th>
+            <th>Description</th>
             <th>Actions</th>
           </tr>
           </thead>
           <tbody>
           <tr v-for="cred in credentials" :key="cred.Id">
-            <td>{{cred.AccessKey}}</td>
-            <th>{{ cred.ExpiresAt ? getLocaleDate(cred.ExpiresAt) : 'Never' }}</th>
-            <td>{{ getLocaleDateTime(cred.CreatedAt) }}</td>
+            <td>{{ cred.AccessKey }}</td>
+            <td>{{ cred.ExpiresAt ? getLocaleDate(cred.ExpiresAt) : 'Never' }}</td>
+            <td>{{ cred.Status ? 'Enabled' : 'Disabled' }}</td>
+            <td>{{ cred.Name }}</td>
+            <td>{{ cred.Description }}</td>
             <td>
               <button @click="promptDelete(cred.AccessKey)">Delete</button>
+              <button @click="promptEdit(cred.AccessKey, cred)">Edit</button>
             </td>
           </tr>
           </tbody>
@@ -113,6 +151,14 @@ onMounted(() => {
         :content="selectedAccessKey"
         @close="showDeleteModal = false"
         @confirm="handleDelete"
+      />
+
+    <EditCredentialsModal
+      v-if="showEditModal"
+      :accessKey="selectedAccessKey"
+      :data="data"
+      @close="showEditModal = false"
+      @continue="handleEdit"
       />
   </div>
 </template>

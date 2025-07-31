@@ -6,7 +6,9 @@ import (
 )
 
 type CreateCredentialsRequest struct {
-	ExpiresAt string `json:"expiresAt"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ExpiresAt   string `json:"expiresAt"`
 }
 
 func (h *Handler) CreateCredentials(c *gin.Context) {
@@ -16,7 +18,7 @@ func (h *Handler) CreateCredentials(c *gin.Context) {
 		return
 	}
 
-	accessKey, secretKey, err := h.Store.CreateCredentials(request.ExpiresAt, false)
+	accessKey, secretKey, err := h.Store.CreateCredentials(request.Name, request.Description, request.ExpiresAt, false)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

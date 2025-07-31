@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import {computed, ref} from "vue";
-import { useRoute } from 'vue-router';
+import {useRoute, useRouter} from 'vue-router';
 
 const isCollapsed = ref(false)
 const isAdmin = ref(true);
 const route = useRoute();
+const router = useRouter()
 
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
@@ -42,6 +43,18 @@ const isActive = (navItem: any) => {
   }
   return route.path === navItem.path || route.path.startsWith(navItem.path + '/');
 };
+
+const logout = async () => {
+  try {
+    const res = await fetch('/api/users/logout')
+
+    if (res.ok) {
+      await router.push('/login')
+    }
+  } catch (err) {
+    console.log("Error logging out:", err)
+  }
+}
 </script>
 
 <template>
@@ -50,25 +63,36 @@ const isActive = (navItem: any) => {
       {{ isCollapsed ? '☰' : '×' }}
     </button>
 
-    <nav class="navbar">
-      <RouterLink
-          v-for="route in filteredRoutes"
-          :key="route.path"
-          :to="route.path"
-          class="nav-link"
-          :class="{ 'router-link-exact-active': isActive(route) }"
-      >
+    <div class="navbar-content">
+      <!-- Top navigation links -->
+      <nav class="nav-links">
+        <RouterLink
+            v-for="route in filteredRoutes"
+            :key="route.path"
+            :to="route.path"
+            class="nav-link"
+            :class="{ 'router-link-exact-active': isActive(route) }"
+        >
+          <div class="icon-container">
+            <img class="nav-icon" :src="'/icons/' + route.icon + '.svg'" width="25" height="25"  :alt="route.name"/>
+          </div>
+          <div class="text-container">
+            <span class="nav-text">{{ route.name }}</span>
+          </div>
+        </RouterLink>
+      </nav>
+
+      <button @click="logout" class="nav-link logout-btn">
         <div class="icon-container">
-          <img class="nav-icon" :src="'/icons/' + route.icon + '.svg'" width="25" height="25"  :alt="route.name"/>
+          <img class="nav-icon" src="/icons/logout.svg" width="25" height="25" alt="Logout" />
         </div>
         <div class="text-container">
-          <span class="nav-text">{{ route.name }}</span>
+          <span class="nav-text">Logout</span>
         </div>
-      </RouterLink>
-    </nav>
+      </button>
+    </div>
   </div>
 </template>
-
 
 <style scoped>
 .navbar-container {
@@ -83,6 +107,8 @@ const isActive = (navItem: any) => {
   transition: width var(--transition-duration) ease;
   flex-shrink: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .navbar-container.collapsed {
@@ -95,23 +121,28 @@ const isActive = (navItem: any) => {
   color: white;
   font-size: 1.5rem;
   cursor: pointer;
-  margin-bottom: 1rem;
   padding: 0.5rem;
-  align-self: flex-start;
-  width: 100%;
   text-align: center;
+  width: 100%;
 }
 
 .toggle-btn:hover {
   background-color: #34495e;
 }
 
-.navbar {
+.navbar-content {
   display: flex;
   flex-direction: column;
-  height: calc(100% - 50px);
-  gap: 4px;
+  justify-content: space-between;
+  flex-grow: 1;
   padding: 0 8px;
+  overflow: hidden;
+}
+
+.nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .nav-link {
@@ -121,8 +152,12 @@ const isActive = (navItem: any) => {
   align-items: center;
   border-radius: 4px;
   padding: 8px;
+  background-color: transparent;
+  border: none;
   transition: background-color 0.2s;
   overflow: hidden;
+  text-align: left;
+  cursor: pointer;
 }
 
 .icon-container {
@@ -160,5 +195,9 @@ const isActive = (navItem: any) => {
 .nav-link.router-link-exact-active {
   background-color: #42b983;
   font-weight: bold;
+}
+
+.logout-btn {
+  margin-bottom: 10px;
 }
 </style>

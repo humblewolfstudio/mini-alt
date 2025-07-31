@@ -2,10 +2,10 @@ package crons
 
 import (
 	"github.com/robfig/cron/v3"
-	"mini-alt/storage"
+	"mini-alt/storage/db"
 )
 
-func SetupDeleteExpiredUsers(store storage.Store) {
+func SetupDeleteExpiredUsers(store *db.Store) {
 	c := cron.New()
 	_, err := c.AddFunc("0 2 * * *", func() { store.DeleteExpiredUsers() })
 	if err != nil {

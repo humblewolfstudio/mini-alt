@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"mini-alt/storage"
+	"mini-alt/storage/disk"
 	"mini-alt/utils"
 	"net/http"
 )
@@ -16,7 +16,7 @@ func (h *Handler) CreateBucket(c *gin.Context, bucketName string) {
 		return
 	}
 
-	if err := storage.CreateBucketDirectory(bucketName); err != nil {
+	if err := disk.CreateBucketDirectory(bucketName); err != nil {
 		utils.RespondS3Error(c, http.StatusInternalServerError, "InternalError",
 			"Could not create storage directory.", bucketName)
 		return

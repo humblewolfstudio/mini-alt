@@ -11,7 +11,8 @@ import (
 	"log"
 	"mini-alt/crons"
 	"mini-alt/router"
-	"mini-alt/storage"
+	"mini-alt/storage/db"
+	"mini-alt/storage/disk"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -38,8 +39,8 @@ func main() {
 	}
 }
 
-func startDatabase() storage.Store {
-	configDir, err := storage.GetAppConfigDir()
+func startDatabase() *db.Store {
+	configDir, err := disk.GetAppConfigDir()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,7 +49,7 @@ func startDatabase() storage.Store {
 	println("Starting server in", parentDir)
 
 	dbPath := filepath.Join(configDir, "mini-alt.sqlite")
-	store, err := storage.NewSQLiteStore(dbPath)
+	store, err := db.NewSQLiteStore(dbPath)
 
 	if err != nil {
 		log.Fatal(err)
@@ -67,7 +68,7 @@ func loadEnv() {
 	}
 }
 
-func startApiServer(store storage.Store) {
+func startApiServer(store *db.Store) {
 
 	r := router.SetupAPIRouter(store)
 
@@ -76,7 +77,7 @@ func startApiServer(store storage.Store) {
 	}
 }
 
-func startWebServer(store storage.Store) {
+func startWebServer(store *db.Store) {
 	r := router.SetupWebRouter(store)
 
 	fsys, err := fs.Sub(embeddedFiles, "frontend/dist")
@@ -88,6 +89,11 @@ func startWebServer(store storage.Store) {
 
 	r.GET("/assets/*filepath", func(c *gin.Context) {
 		c.Request.URL.Path = "/assets" + c.Param("filepath")
+		fileServer.ServeHTTP(c.Writer, c.Request)
+	})
+
+	r.GET("/icons/*filepath", func(c *gin.Context) {
+		c.Request.URL.Path = "/icons" + c.Param("filepath")
 		fileServer.ServeHTTP(c.Writer, c.Request)
 	})
 

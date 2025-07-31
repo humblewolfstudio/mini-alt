@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"mini-alt/storage"
+	"mini-alt/models"
 )
 
 func createTestClient(h *Handler, id int64) *s3.S3 {
@@ -37,16 +37,16 @@ type FileItem struct {
 	IsFolder     bool   `json:"isFolder"`
 }
 
-func getCredentials(h *Handler, id int64) (storage.Credentials, error) {
+func getCredentials(h *Handler, id int64) (models.Credentials, error) {
 	user, err := h.Store.GetUserById(id)
 	if err != nil {
-		return storage.Credentials{}, err
+		return models.Credentials{}, err
 	}
 
 	secretKey, err := h.Store.GetSecretKey(user.AccessKey)
 	if err != nil {
-		return storage.Credentials{}, err
+		return models.Credentials{}, err
 	}
 
-	return storage.Credentials{AccessKey: user.AccessKey, SecretKey: secretKey}, nil
+	return models.Credentials{AccessKey: user.AccessKey, SecretKey: secretKey}, nil
 }

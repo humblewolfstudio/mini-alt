@@ -1,3 +1,13 @@
+FROM node:20 AS frontend-builder
+
+WORKDIR /frontend
+
+COPY frontend/package*.json ./
+RUN npm install
+
+COPY frontend/ .
+RUN npm run build
+
 FROM golang:1.24 AS builder
 
 WORKDIR /app
@@ -6,6 +16,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+COPY --from=frontend-builder /frontend/dist ./frontend/dist
 
 RUN go build -o mini-alt .
 
