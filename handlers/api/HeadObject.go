@@ -20,8 +20,19 @@ func (h *Handler) HeadObject(c *gin.Context) {
 		return
 	}
 
+	metadata, err := h.Store.GetMetadata(object.Id)
+	if err != nil {
+		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchKey", err.Error(), bucketName)
+		return
+	}
+
 	c.Header("Last-Modified", object.LastModified.Format(http.TimeFormat))
-	c.Header("Content-Length", strconv.FormatInt(object.Size, 10))
+	c.Header("Content-Length", strconv.FormatInt(metadata.ContentLength, 10))
+	c.Header("Content-Disposition", metadata.ContentDisposition)
+	c.Header("Content-Encoding", metadata.ContentEncoding)
+	c.Header("Content-Language", metadata.ContentLanguage)
+	c.Header("Cache-Control", metadata.CacheControl)
+	c.Header("Content-Type", metadata.ContentType)
 
 	c.Status(http.StatusOK)
 }

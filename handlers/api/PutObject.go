@@ -1,13 +1,16 @@
 package api
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
+	"mime"
+	"mime/multipart"
 	"mini-alt/storage/disk"
 	"mini-alt/types"
 	"mini-alt/utils"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 type PutObjectErrors string
@@ -81,6 +84,18 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 
 	putObjectRequest := BindPutObjectRequest(c)
 
+	if c.Request.MultipartForm != nil {
+		fileHeader, err := c.FormFile("file")
+		if err == nil {
+			putObjectRequest = fillMissingMetadataFromFile(fileHeader, putObjectRequest)
+		}
+	} else {
+		if putObjectRequest.ContentType == "" {
+			ext := filepath.Ext(objectKey)
+			putObjectRequest.ContentType = mime.TypeByExtension(ext)
+		}
+	}
+
 	if putObjectRequest.IfMatch != "" {
 		existingObject, err := h.Store.GetObject(bucketName, objectKey)
 		if err == nil {
@@ -118,13 +133,6 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 	}
 
 	md5, err := disk.GetMD5Base64(path)
-	if err == nil {
-		if md5 == putObjectRequest.ContentMD5 {
-			fmt.Printf("Object integrity verified for %s", path)
-		} else {
-			fmt.Printf("Object integrity could not be verified for %s", path)
-		}
-	}
 
 	err = h.Store.PutMetadata(object.Id, putObjectRequest.ToMetadata())
 	if err != nil {
@@ -149,4 +157,29 @@ func HandleError(c *gin.Context, err PutObjectErrors, bucket, msg string) {
 	case PreconditionFailed:
 		utils.RespondS3Error(c, http.StatusPreconditionFailed, "PreconditionFailed", msg, bucket)
 	}
+}
+
+func fillMissingMetadataFromFile(fileHeader *multipart.FileHeader, req *PutObjectRequest) *PutObjectRequest {
+	if req == nil {
+		req = &PutObjectRequest{}
+	}
+
+	if req.ContentType == "" {
+		ext := filepath.Ext(fileHeader.Filename)
+		req.ContentType = mime.TypeByExtension(ext)
+	}
+
+	if req.ContentLength == 0 {
+		req.ContentLength = fileHeader.Size
+	}
+
+	if req.ContentDisposition == "" {
+		req.ContentDisposition = "inline; filename=\"" + fileHeader.Filename + "\""
+	}
+
+	if req.ContentEncoding == "" && strings.HasSuffix(fileHeader.Filename, ".gz") {
+		req.ContentEncoding = "gzip"
+	}
+
+	return req
 }

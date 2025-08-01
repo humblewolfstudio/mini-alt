@@ -53,7 +53,7 @@ func (s *Store) initSchema() error {
 
 	CREATE TABLE IF NOT EXISTS object_metadata (
 	    id INTEGER PRIMARY KEY AUTOINCREMENT,
-	    object_id INTEGER NOT NULL,
+	    object_id INTEGER NOT NULL UNIQUE,
 	    acl TEXT,
 	    cache_control TEXT,
 	    content_disposition TEXT,

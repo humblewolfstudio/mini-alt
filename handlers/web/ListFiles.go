@@ -20,6 +20,11 @@ func (h *Handler) ListFiles(c *gin.Context) {
 	bucket := c.Query("bucket")
 	prefix := c.Query("prefix")
 
+	prefix = strings.TrimPrefix(prefix, "/")
+	if prefix != "" && !strings.HasSuffix(prefix, "/") {
+		prefix += "/"
+	}
+
 	s3Client := createTestClient(h, id.(int64))
 
 	resp, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
@@ -34,11 +39,21 @@ func (h *Handler) ListFiles(c *gin.Context) {
 	}
 
 	var files []FileItem
-
 	for _, folder := range resp.CommonPrefixes {
+		folderPrefix := *folder.Prefix
+		if !strings.HasSuffix(folderPrefix, "/") {
+			folderPrefix += "/"
+		}
+
+		folderName := strings.TrimPrefix(folderPrefix, prefix)
+		folderName = strings.Trim(folderName, "/")
+		if folderName == "" {
+			folderName = strings.TrimSuffix(filepath.Base(folderPrefix), "/")
+		}
+
 		files = append(files, FileItem{
 			Key:      *folder.Prefix,
-			Name:     strings.TrimPrefix(*folder.Prefix, prefix),
+			Name:     folderName,
 			IsFolder: true,
 		})
 	}

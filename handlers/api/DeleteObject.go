@@ -11,8 +11,7 @@ import (
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObject.html
 func (h *Handler) DeleteObject(c *gin.Context) {
 	bucketName := c.Param("bucket")
-	objectKey := c.Param("object")
-	object := objectKey[1:]
+	object := c.Param("object")
 
 	// Also delete all files
 	err := h.Store.DeleteObject(bucketName, object)
@@ -29,6 +28,5 @@ func (h *Handler) DeleteObject(c *gin.Context) {
 		println(err.Error())
 	}
 
-	println(err)
 	c.Status(http.StatusNoContent)
 }

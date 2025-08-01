@@ -40,7 +40,7 @@ const fetchFiles = async () => {
 }
 
 const navigateToFolder = (prefix: string) => {
-  currentPath.value = prefix
+  currentPath.value = "/" + prefix
   fetchFiles()
 }
 
