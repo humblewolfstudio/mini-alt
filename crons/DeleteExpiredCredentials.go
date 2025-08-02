@@ -6,6 +6,7 @@ import (
 )
 
 func SetupDeleteExpiredCredentials(store *db.Store) {
+	store.DeleteExpiredCredentials()
 	c := cron.New()
 	_, err := c.AddFunc("0 2 * * *", func() { store.DeleteExpiredCredentials() })
 	if err != nil {
