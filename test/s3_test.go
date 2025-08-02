@@ -11,6 +11,7 @@ import (
 )
 
 func createTestClient() *s3.S3 {
+	//goland:noinspection SpellCheckingInspection
 	cfg := &aws.Config{
 		Region:           aws.String("us-east-1"),
 		Endpoint:         aws.String("http://localhost:9000"),
