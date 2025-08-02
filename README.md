@@ -23,12 +23,11 @@ GOOS=darwin GOARCH=amd64 go build -o build/mini-alt-amd .
 
 lipo -create -output build/mini-alt build/mini-alt-arm build/mini-alt-amd
 ```
-
 ## Initial Data Directory Setup
 
 Mini-Alt comes with a method to load a directory on startup :)
 
-Here I explains how to prepare your local directories so they can be automatically loaded as buckets and objects into the system.
+Here I explain how to prepare your local directories so they can be automatically loaded as buckets and objects into the system.
 
 > Run the binary with the `-load-initial-data` flag to trigger this loading process.
 
