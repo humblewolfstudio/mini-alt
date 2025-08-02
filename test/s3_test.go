@@ -17,8 +17,8 @@ func createTestClient() *s3.S3 {
 		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
 		Credentials: credentials.NewStaticCredentials(
-			"YOUR_ACCESS_KEY_ID",
-			"YOUR_SECRET_ACCESS_KEY",
+			"4yQlUGKo63I38E5S",
+			"Cj50bBelkOI61lhC5clYcYAwqS5RzXPY",
 			""),
 	}
 
@@ -152,6 +152,19 @@ func TestHeadBucket(t *testing.T) {
 
 	_, err := s3Client.HeadBucket(&s3.HeadBucketInput{
 		Bucket: aws.String("test-bucket"),
+	})
+
+	if err != nil {
+		t.Fatalf("HeadBucket failed: %v", err)
+	}
+}
+
+func TestHeadObject(t *testing.T) {
+	s3Client := createTestClient()
+
+	_, err := s3Client.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String("test-bucket"),
+		Key:    aws.String("test-object.txt"),
 	})
 
 	if err != nil {

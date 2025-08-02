@@ -26,7 +26,7 @@ const pathParts = computed(() => {
   let currentPath = ''
 
   for (const part of parts) {
-    currentPath += part + '/'
+    currentPath += '/' + part
     result.push({
       name: part,
       path: currentPath

@@ -101,6 +101,7 @@ const handleRename = async ({ newName }: { newName: string }) => {
   const oldKey = itemToModify.value.key
   const pathParts = oldKey.split('/')
   pathParts.pop()
+  pathParts.pop()
   const newKey = pathParts.join('/') + (pathParts.length > 0 ? '/' : '') + newName
 
   try {

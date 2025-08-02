@@ -1,11 +1,28 @@
 package middlewares
 
 import (
+	"encoding/xml"
 	"github.com/gin-gonic/gin"
 	"mini-alt/auth"
 	"mini-alt/handlers/api"
 	"net/http"
 )
+
+type S3ErrorResponse struct {
+	XMLName   xml.Name `xml:"Error"`
+	Code      string   `xml:"Code"`
+	Message   string   `xml:"Message"`
+	RequestID string   `xml:"RequestId,omitempty"`
+	HostID    string   `xml:"HostId,omitempty"`
+}
+
+func respondS3Error(c *gin.Context, code, message string) {
+	c.XML(http.StatusUnauthorized, S3ErrorResponse{
+		Code:    code,
+		Message: message,
+	})
+	c.Abort()
+}
 
 func APIAuthenticationMiddleware(h *api.Handler) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -14,26 +31,30 @@ func APIAuthenticationMiddleware(h *api.Handler) gin.HandlerFunc {
 		payloadHash := c.GetHeader("x-amz-content-sha256")
 
 		if authHeader == "" || dateHeader == "" || payloadHash == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing auth headers"})
+			respondS3Error(c, "AccessDenied", "Missing Authentication Headers")
 			return
 		}
 
 		parsedAuth, err := auth.ParseAuthorizationHeader(authHeader)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid auth header"})
+			respondS3Error(c, "AccessDenied", "Invalid Authorization Header")
 			return
 		}
 
 		secretKey, err := h.Store.GetSecretKey(parsedAuth.AccessKeyID)
-		if secretKey == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unknown access key"})
+		if err != nil || secretKey == "" {
+			respondS3Error(c, "AccessDenied", "Unknown Access Key")
 			return
 		}
 
-		expectedSig := auth.CalculateSignature(c.Request, parsedAuth, secretKey, dateHeader, payloadHash)
+		expectedSig, err := auth.CalculateSignature(c.Request, parsedAuth, secretKey, dateHeader, payloadHash)
+		if err != nil {
+			respondS3Error(c, "AccessDenied", err.Error())
+			return
+		}
 
 		if parsedAuth.Signature != expectedSig {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Signature mismatch"})
+			respondS3Error(c, "AccessDenied", "Signature Mismatch")
 			return
 		}
 

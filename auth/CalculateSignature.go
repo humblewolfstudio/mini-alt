@@ -6,24 +6,37 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"net/url"
+	"sort"
 	"strings"
 )
 
-func CalculateSignature(r *http.Request, parsed *ParsedAuth, secretKey, amzDate, payloadHash string) string {
+func CalculateSignature(r *http.Request, parsed *ParsedAuth, secretKey, amzDate, payloadHash string) (string, error) {
 	canonicalHeaders := ""
-	for _, header := range strings.Split(parsed.SignedHeaders, ";") {
+
+	signedHeaders := strings.Split(parsed.SignedHeaders, ";")
+
+	for _, header := range signedHeaders {
 		header = strings.ToLower(header)
-		value := r.Header.Get(header)
+		var value string
+
 		if header == "host" {
 			value = r.Host
+		} else {
+			vals := r.Header.Values(header)
+			if len(vals) == 0 {
+				return "", fmt.Errorf("missing signed header: %s", header)
+			}
+			value = strings.Join(vals, ",")
 		}
+
 		canonicalHeaders += header + ":" + normalizeHeaderValue(value) + "\n"
 	}
 
 	canonicalRequest := strings.Join([]string{
 		r.Method,
-		normalizePath(r.URL.EscapedPath()),
-		r.URL.RawQuery,
+		normalizePath(r.URL.Path),
+		canonicalQueryString(r.URL.Query()),
 		canonicalHeaders,
 		parsed.SignedHeaders,
 		payloadHash,
@@ -42,7 +55,42 @@ func CalculateSignature(r *http.Request, parsed *ParsedAuth, secretKey, amzDate,
 	signingKey := getSignatureKey(secretKey, parsed.Date, parsed.Region, parsed.Service)
 
 	signature := hmacSHA256Hex(signingKey, stringToSign)
-	return signature
+	return signature, nil
+}
+
+func canonicalQueryString(query url.Values) string {
+	var keys []string
+	for key := range query {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	var result []string
+	for _, key := range keys {
+		values := query[key]
+		sort.Strings(values)
+		for _, value := range values {
+			encodedKey := strings.ReplaceAll(url.QueryEscape(key), "+", "%20")
+			encodedValue := strings.ReplaceAll(url.QueryEscape(value), "+", "%20")
+			result = append(result, encodedKey+"="+encodedValue)
+		}
+	}
+	return strings.Join(result, "&")
+}
+
+func normalizePath(path string) string {
+	if path == "" {
+		return "/"
+	}
+	segments := strings.Split(path, "/")
+	for i, segment := range segments {
+		segments[i] = url.PathEscape(segment)
+	}
+	return strings.Join(segments, "/")
+}
+
+func normalizeHeaderValue(value string) string {
+	return strings.Join(strings.Fields(value), " ")
 }
 
 func hmacSHA256(key []byte, data string) []byte {
@@ -67,19 +115,4 @@ func getSignatureKey(secret, date, region, service string) []byte {
 	kService := hmacSHA256(kRegion, service)
 	kSigning := hmacSHA256(kService, "aws4_request")
 	return kSigning
-}
-
-func normalizeHeaderValue(value string) string {
-	return strings.Join(strings.Fields(value), " ")
-}
-
-func normalizePath(path string) string {
-	if path == "" {
-		return "/"
-	}
-
-	if path != "/" && strings.HasSuffix(path, "/") {
-		path = strings.TrimSuffix(path, "/")
-	}
-	return path
 }

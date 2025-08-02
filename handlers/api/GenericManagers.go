@@ -14,8 +14,6 @@ func (h *Handler) GetObjectOrList(c *gin.Context) {
 		return
 	}
 
-	object = object[1:]
-
 	h.GetObject(c, bucket, object)
 }
 
@@ -34,7 +32,6 @@ func (h *Handler) PutObjectOrBucket(c *gin.Context) {
 		return
 	}
 
-	object = object[1:]
 	h.PutObject(c, bucket, object)
 }
 

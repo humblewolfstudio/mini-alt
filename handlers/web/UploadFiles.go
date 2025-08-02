@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gin-gonic/gin"
@@ -60,8 +59,6 @@ func (h *Handler) UploadFiles(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid object key path"})
 			return
 		}
-
-		fmt.Printf("Uploading to bucket=%s key=%s\n", bucket, key)
 
 		_, err = s3Client.PutObject(&s3.PutObjectInput{
 			Bucket: aws.String(bucket),

@@ -28,20 +28,20 @@ func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 
 	// Parse max-keys parameter
 	if params.Has("max-keys") {
-		parsedMaxKeys, err := strconv.Atoi(params.Get("max-keys"))
-		if err == nil {
+		if parsedMaxKeys, err := strconv.Atoi(params.Get("max-keys")); err == nil {
 			maxKeys = parsedMaxKeys
 		}
 	}
 
 	// Parse start-after parameter
 	if params.Has("start-after") {
-		startAfter = params.Get("start-after")
+		startAfter = strings.TrimSpace(params.Get("start-after"))
 	}
 
 	// Parse prefix parameter
 	if params.Has("prefix") {
-		prefix = params.Get("prefix")
+		prefix = strings.TrimSpace(params.Get("prefix"))
+		prefix = strings.TrimPrefix(prefix, "/")
 	}
 
 	// Parse delimiter parameter (typically "/")
@@ -75,13 +75,14 @@ func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 			break
 		}
 
-		if len(prefix) > 0 && !strings.HasPrefix(object.Key, prefix) {
+		objectKey := strings.TrimPrefix(object.Key, "/")
+
+		if prefix != "" && !strings.HasPrefix(objectKey, prefix) {
 			continue
 		}
 
 		if delimiter != "" {
-			remainingPart := strings.TrimPrefix(object.Key, prefix)
-
+			remainingPart := strings.TrimPrefix(objectKey, prefix)
 			delimiterPos := strings.Index(remainingPart, delimiter)
 
 			if delimiterPos >= 0 {
@@ -94,24 +95,18 @@ func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 					seenPrefixes[commonPrefix] = true
 					keyCount++
 				}
-				continue // Skip adding to Contents as it's in a subdirectory
+				continue
 			}
 		}
 
-		// Add to Contents only if:
-		// 1. No prefix is specified, or
-		// 2. The object is exactly in the current prefix level (no additional delimiters)
-		if len(prefix) == 0 || !strings.Contains(strings.TrimPrefix(object.Key, prefix), delimiter) {
-			xmlContents = append(xmlContents, encoding.Content{
-				Key:          object.Key,
-				LastModified: object.LastModified,
-				Size:         object.Size,
-			})
-			keyCount++
-		}
+		xmlContents = append(xmlContents, encoding.Content{
+			Key:          object.Key,
+			LastModified: object.LastModified,
+			Size:         object.Size,
+		})
+		keyCount++
 	}
 
-	// Set the response fields
 	xmlListBucketResult.Contents = xmlContents
 	xmlListBucketResult.CommonPrefixes = commonPrefixes
 	xmlListBucketResult.IsTruncated = isTruncated

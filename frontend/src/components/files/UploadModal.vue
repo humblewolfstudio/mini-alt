@@ -31,12 +31,13 @@ const handleFileChange = async (event: Event) => {
 
   try {
     const formData = new FormData();
+    formData.append('bucket', props.bucket);
+    formData.append('prefix', props.currentPath);
+
     for (let i = 0; i < files.length; i++) {
       const safeName = files[i].name.replace(/\s+/g, '_');
       formData.append('files', files[i], safeName);
     }
-    formData.append('bucket', props.bucket);
-    formData.append('prefix', props.currentPath);
 
     const response = await fetch('/api/files/upload', {
       method: 'POST',

@@ -16,7 +16,7 @@ func (h *Handler) CreateBucket(c *gin.Context, bucketName string) {
 		return
 	}
 
-	if err := disk.CreateBucketDirectory(bucketName); err != nil {
+	if err := disk.CreateBucket(bucketName); err != nil {
 		utils.RespondS3Error(c, http.StatusInternalServerError, "InternalError",
 			"Could not create storage directory.", bucketName)
 		return

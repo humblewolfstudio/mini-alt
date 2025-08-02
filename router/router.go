@@ -11,16 +11,22 @@ import (
 
 func SetupAPIRouter(store *db.Store) *gin.Engine {
 	r := gin.New()
+	r.RedirectTrailingSlash = false
 	r.Use(customLogger("API-SERVER"))
 
 	h := api.Handler{Store: store}
 
+	r.Use(middlewares.NormalizeObjectKeys())
 	r.Use(middlewares.APIAuthenticationMiddleware(&h))
 
 	r.GET("/", h.ListBuckets)
 	r.PUT("/:bucket/*object", h.PutObjectOrBucket)
+	r.PUT("/:bucket", h.PutObjectOrBucket)
+	r.GET("/:bucket", h.GetObjectOrList)
 	r.GET("/:bucket/*object", h.GetObjectOrList)
+	r.HEAD("/:bucket", h.HeadBucket)
 	r.HEAD("/:bucket/*object", h.HeadObjectOrBucket)
+	r.DELETE("/:bucket", h.DeleteBucket)
 	r.DELETE("/:bucket/*object", h.DeleteObjectOrBucket)
 
 	return r
