@@ -13,7 +13,13 @@ import (
 // CopyObject
 // TODO clean and add description
 func (h *Handler) CopyObject(c *gin.Context, bucketName, objectKey, copySource string) {
-	parts := strings.SplitN(copySource, "/", 3)
+	decodedCopySource, err := url.PathUnescape(copySource)
+	if err != nil {
+		utils.RespondS3Error(c, http.StatusBadRequest, "InvalidSourceKey", "Invalid source object key encoding", "")
+	}
+	println("copySource: ", decodedCopySource)
+
+	parts := strings.SplitN(decodedCopySource, "/", 3)
 	/*
 		if len(parts) != 2 {
 		        http.Error(w, "Invalid x-amz-copy-source header", http.StatusBadRequest)

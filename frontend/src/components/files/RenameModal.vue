@@ -25,11 +25,22 @@ const handleRename = async () => {
     return
   }
 
+  let trimmedName = newName.value.trim()
+
+  if (props.item.isFolder && !trimmedName.endsWith('/')) {
+    trimmedName += '/'
+  }
+
+  if (trimmedName === props.item?.name) {
+    emit('close')
+    return
+  }
+
   isLoading.value = true
   errorMessage.value = ''
 
   try {
-    await emit('rename', { newName: newName.value.trim() })
+    await emit('rename', { newName: trimmedName })
     emit('close')
   } catch (error) {
     errorMessage.value = 'Failed to rename. Please try again.'

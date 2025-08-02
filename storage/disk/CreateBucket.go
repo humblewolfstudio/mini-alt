@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-func CreateBucketDirectory(bucketName string) error {
+func CreateBucket(bucketName string) error {
 	bucketsDir, err := GetBucketsDir()
 	if err != nil {
 		return err
