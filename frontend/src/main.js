@@ -27,7 +27,7 @@ const routes = [
     { path: '/users/create-users', component: UsersCreateView },
     { path: '/login', component: LoginView },
     { path: '/events', component: EventsView },
-    { path: '/events/create-events', component: EventsCreateView },
+    { path: '/events/create-event', component: EventsCreateView },
 ]
 
 const router = createRouter({
