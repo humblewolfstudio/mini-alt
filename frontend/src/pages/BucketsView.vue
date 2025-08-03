@@ -54,7 +54,7 @@ onMounted(() => {
             <td>{{ bucket.Name }}</td>
             <td>{{ bucket.NumberObjects }}</td>
             <td>{{ formatSize(bucket.Size) }}</td>
-            <td>{{getLocaleDateTime(bucket.CreatedAt)}}</td>
+            <td>{{ getLocaleDateTime(bucket.CreatedAt) }}</td>
             <td>
               <RouterLink :to="'/buckets/' + bucket.Name">View</RouterLink>
             </td>
@@ -82,18 +82,5 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.error-message {
-  color: #ff4444;
-  padding: 15px;
-  text-align: center;
-  background-color: #ffeeee;
-  border-radius: 4px;
-  margin-top: 10px;
-}
 
-.empty-message {
-  padding: 15px;
-  text-align: center;
-  color: #888;
-}
 </style>
