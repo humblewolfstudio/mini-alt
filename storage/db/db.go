@@ -94,6 +94,13 @@ func (s *Store) initSchema() error {
 	    value TEXT NOT NULL,
 	    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
+
+	CREATE TABLE IF NOT EXISTS events (
+	    id INTEGER PRIMARY KEY AUTOINCREMENT,
+	    name TEXT UNIQUE NOT NULL,
+	    bucket_id INTEGER NOT NULL,
+	    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
 `
 	_, err := s.db.Exec(schema)
 	return err

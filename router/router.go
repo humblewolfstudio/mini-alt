@@ -64,6 +64,8 @@ func SetupWebRouter(store *db.Store) *gin.Engine {
 		apiGroup.GET("/users/authenticate", h.AuthenticateUser)
 
 		apiGroup.GET("/users/logout", h.LogoutUser)
+
+		apiGroup.GET("/events", h.ListEvents)
 	}
 
 	return r
