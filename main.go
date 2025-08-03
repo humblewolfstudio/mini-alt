@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"log"
 	"mini-alt/crons"
+	"mini-alt/jobs"
 	"mini-alt/router"
 	"mini-alt/storage/db"
 	"mini-alt/storage/disk"
@@ -23,20 +24,19 @@ import (
 var embeddedFiles embed.FS
 
 func main() {
-	noWeb := flag.Bool("no-web", false, "Disable web interface")
+	loadInitialData := flag.Bool("load-initial-data", false, "Load initial data")
 	flag.Parse()
 
 	loadEnv()
 	store := startDatabase()
 	crons.StartupCronJobs(store)
 
-	if *noWeb {
-		startApiServer(store)
-		println("Starting without web interface")
-	} else {
-		go startApiServer(store)
-		startWebServer(store)
+	if *loadInitialData {
+		jobs.LoadInitialData(store)
 	}
+
+	go startApiServer(store)
+	startWebServer(store)
 }
 
 func startDatabase() *db.Store {
