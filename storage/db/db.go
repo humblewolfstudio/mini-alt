@@ -86,7 +86,14 @@ func (s *Store) initSchema() error {
 		access_key TEXT NOT NULL,
 	    expires_at DATE DEFAULT NULL,
 	    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	)
+	);
+	
+	CREATE TABLE IF NOT EXISTS config (
+	    id INTEGER PRIMARY KEY AUTOINCREMENT,
+	    key TEXT UNIQUE NOT NULL,
+	    value TEXT NOT NULL,
+	    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
 `
 	_, err := s.db.Exec(schema)
 	return err
