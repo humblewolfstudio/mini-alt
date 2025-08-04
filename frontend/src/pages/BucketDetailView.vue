@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import Breadcrumb from "../components/files/Breadcrumb.vue";
 import FileItem from "../components/files/FileItem.vue";
 import UploadModal from "../components/files/UploadModal.vue";
@@ -9,6 +9,7 @@ import DeleteModal from "../components/files/DeleteModal.vue";
 import RenameModal from "../components/files/RenameModal.vue";
 import MoveModal from "../components/files/MoveModal.vue";
 
+const router = useRouter()
 const route = useRoute()
 const bucketName = route.params.slug as string
 
@@ -29,6 +30,11 @@ const fetchFiles = async () => {
   errorMessage.value = ''
   try {
     const res = await fetch(`/api/files/list?bucket=${bucketName}&prefix=${currentPath.value}`)
+
+    if(res.status === 401) {
+      await router.push('/login')
+    }
+
     const data = await res.json()
     files.value = data.data || []
   } catch (error) {

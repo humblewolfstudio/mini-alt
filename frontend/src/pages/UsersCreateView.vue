@@ -29,6 +29,10 @@ const createUser = async () => {
       })
     })
 
+    if(res.status === 401) {
+      await router.push('/login')
+    }
+
     const data = await res.json()
     if (res.ok) {
       await router.push('/users')
