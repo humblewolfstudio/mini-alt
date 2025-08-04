@@ -27,6 +27,10 @@ const createBucket = async () => {
       body: JSON.stringify({ name: bucketName.value }),
     });
 
+    if(res.status === 401) {
+      await router.push('/login')
+    }
+
     if (res.ok) {
       success.value = 'Bucket created successfully!';
       bucketName.value = '';

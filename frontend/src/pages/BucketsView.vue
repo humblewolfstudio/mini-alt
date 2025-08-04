@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
 import {formatSize, getLocaleDateTime} from "../utils";
+import {useRouter} from "vue-router";
 
+const router = useRouter()
 const isLoading = ref(false);
 const buckets = ref([]);
 const error = ref<string | null>(null);
@@ -18,6 +20,9 @@ const fetchBuckets = async () => {
       if(data) buckets.value = data
     }
 
+    if(res.status === 401) {
+      await router.push('/login')
+    }
   } catch (err) {
     console.error("Error fetching buckets:", err);
     error.value = err instanceof Error ? err.message : "Failed to load buckets";
@@ -54,7 +59,7 @@ onMounted(() => {
             <td>{{ bucket.Name }}</td>
             <td>{{ bucket.NumberObjects }}</td>
             <td>{{ formatSize(bucket.Size) }}</td>
-            <td>{{getLocaleDateTime(bucket.CreatedAt)}}</td>
+            <td>{{ getLocaleDateTime(bucket.CreatedAt) }}</td>
             <td>
               <RouterLink :to="'/buckets/' + bucket.Name">View</RouterLink>
             </td>
@@ -82,18 +87,5 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.error-message {
-  color: #ff4444;
-  padding: 15px;
-  text-align: center;
-  background-color: #ffeeee;
-  border-radius: 4px;
-  margin-top: 10px;
-}
 
-.empty-message {
-  padding: 15px;
-  text-align: center;
-  color: #888;
-}
 </style>
