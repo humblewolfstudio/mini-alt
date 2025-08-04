@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import {useRouter} from "vue-router";
 
 const props = defineProps({
   bucket: {
@@ -18,6 +19,7 @@ const fileInput = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
 const errorMessage = ref('');
 const successMessage = ref('');
+const router = useRouter()
 
 const handleFileChange = async (event: Event) => {
   const files = (event.target as HTMLInputElement).files;
@@ -46,6 +48,10 @@ const handleFileChange = async (event: Event) => {
 
     if (!response.ok) {
       errorMessage.value = 'Upload failed';
+    }
+
+    if(response.status === 401) {
+      await router.push('/login')
     }
 
     successMessage.value = 'Files uploaded successfully!';

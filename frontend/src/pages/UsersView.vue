@@ -3,11 +3,13 @@
 import {onMounted, ref} from "vue";
 import {getLocaleDate, getLocaleDateTime} from "../utils";
 import DeleteModal from "../components/modals/DeleteModal.vue";
+import {useRouter} from "vue-router";
 
 const showDeleteModal = ref(false)
 
 const selectedUser = ref('')
 
+const router = useRouter()
 const isLoading = ref(false)
 const users = ref([])
 const error = ref<string | null>(null)
@@ -18,6 +20,10 @@ const fetchUsers = async () => {
     error.value = null
 
     const res = await fetch('/api/users/list')
+
+    if(res.status === 401) {
+      await router.push('/login')
+    }
 
     if (res.ok) {
       const data = await res.json()

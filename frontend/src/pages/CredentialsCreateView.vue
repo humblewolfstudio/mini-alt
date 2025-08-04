@@ -33,6 +33,10 @@ const createCredentials = async () => {
         })
       })
 
+      if(res.status === 401) {
+        await router.push('/login')
+      }
+
       const data = await res.json()
       if (res.ok) {
         accessKey.value = data.access_key

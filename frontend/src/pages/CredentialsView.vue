@@ -4,6 +4,7 @@ import {onMounted, ref} from "vue";
 import DeleteModal from "../components/modals/DeleteModal.vue";
 import {getLocaleDate} from "../utils";
 import EditCredentialsModal from "../components/credentials/EditCredentialsModal.vue";
+import {useRouter} from "vue-router";
 
 const showDeleteModal = ref(false)
 const showEditModal = ref(false)
@@ -11,6 +12,7 @@ const data = ref<any | null>(null)
 
 const selectedAccessKey = ref('')
 
+const router = useRouter()
 const isLoading = ref(false)
 const credentials = ref([])
 const error = ref<string | null>(null)
@@ -21,6 +23,10 @@ const fetchCredentials = async () => {
     error.value = null
 
     const res = await fetch('/api/credentials')
+
+    if(res.status === 401) {
+      await router.push('/login')
+    }
 
     if (res.ok) {
       const data = await res.json()
