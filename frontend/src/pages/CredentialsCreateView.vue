@@ -2,6 +2,7 @@
 import {useRouter} from "vue-router";
 import {ref} from "vue";
 import ShowCredentialsModal from "../components/credentials/ShowCredentialsModal.vue";
+import {fetchCreateCredentials} from "../sources/CredentialsDataSource";
 
 const router = useRouter()
 const accessKey = ref('')
@@ -21,30 +22,15 @@ const createCredentials = async () => {
       error.value = null
       showCredentialsModal.value = false
 
-      const res = await fetch('/api/credentials', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          expiresAt: expiresAt.value ? new Date(expiresAt.value).toISOString() : null,
-          name: name.value,
-          description: description.value
-        })
+      const data = await fetchCreateCredentials({
+        expiresAt: expiresAt.value ? new Date(expiresAt.value).toISOString() : null,
+        name: name.value,
+        description: description.value
       })
 
-      if(res.status === 401) {
-        await router.push('/login')
-      }
-
-      const data = await res.json()
-      if (res.ok) {
-        accessKey.value = data.access_key
-        secretKey.value = data.secret_key
-        showCredentialsModal.value = true
-      } else {
-        error.value = data.message || 'Failed to create credentials'
-      }
+      accessKey.value = data.access_key
+      secretKey.value = data.secret_key
+      showCredentialsModal.value = true
     } catch (err) {
       console.error('Error creating credentials:', err)
       error.value = err instanceof Error ? err.message : 'Failed to create credentials'

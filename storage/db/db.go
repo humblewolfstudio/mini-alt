@@ -98,6 +98,7 @@ func (s *Store) initSchema() error {
 	CREATE TABLE IF NOT EXISTS events (
 	    id INTEGER PRIMARY KEY AUTOINCREMENT,
 	    name TEXT UNIQUE NOT NULL,
+	    description TEXT,
 	    bucket_id INTEGER NOT NULL,
 	    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);

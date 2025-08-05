@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
 import {getLocaleDateTime} from "../utils";
+import {fetchListEvents} from "../sources/EventsDataSource";
 
 const isLoading = ref(false)
 const events = ref([])
@@ -11,12 +12,7 @@ const fetchEvents = async () => {
     isLoading.value = true
     error.value = null
 
-    const res = await fetch('/api/events')
-
-    if (res.ok) {
-      const data = await res.json()
-      if (data) events.value = data
-    }
+    events.value = await fetchListEvents()
     
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load events'
@@ -43,6 +39,7 @@ onMounted(() => {
           <thead>
           <tr>
             <th>Name</th>
+            <th>Description</th>
             <th>Created</th>
             <th>Actions</th>
           </tr>
@@ -50,6 +47,7 @@ onMounted(() => {
           <tbody>
           <tr v-for="event in events" :key="event.Id">
             <td>{{ event.Name }}</td>
+            <td>{{ event.Description }}</td>
             <td>{{ getLocaleDateTime(event.CreatedAt) }}</td>
             <td></td>
           </tr>

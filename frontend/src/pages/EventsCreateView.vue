@@ -2,10 +2,12 @@
 
 import {useRouter} from "vue-router";
 import {onMounted, ref} from "vue";
+import {fetchListBuckets} from "../sources/BucketsDataSource";
 
 const router = useRouter()
 
 const name = ref('')
+const description = ref('')
 const selectedBucket = ref('0')
 
 const buckets = ref([])
@@ -29,6 +31,7 @@ const createEvents = async () => {
       },
       body: JSON.stringify({
         name: name.value,
+        description: description.value,
         bucket: bucket
       })
     })
@@ -51,12 +54,7 @@ const fetchBuckets = async () => {
     isLoading.value = true;
     error.value = null;
 
-    const res = await fetch('/api/buckets')
-
-    if(res.ok) {
-      const data = await res.json()
-      if(data) buckets.value = data
-    }
+    buckets.value = await fetchListBuckets()
 
   } catch (err) {
     console.error("Error fetching buckets:", err);
@@ -90,6 +88,18 @@ onMounted(() => {
             :disabled="isLoading"
         />
         <p class="hint">The name for the event is optional.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <input
+            id="description"
+            v-model="description"
+            type="text"
+            placeholder="Event description"
+            :disabled="isLoading"
+        />
+        <p class="hint">The description for the event is optional.</p>
       </div>
 
       <div class="form-group">

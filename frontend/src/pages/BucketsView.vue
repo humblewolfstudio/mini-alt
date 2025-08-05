@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
 import {formatSize, getLocaleDateTime} from "../utils";
-import {useRouter} from "vue-router";
+import {fetchListBuckets} from "../sources/BucketsDataSource";
 
-const router = useRouter()
 const isLoading = ref(false);
 const buckets = ref([]);
 const error = ref<string | null>(null);
@@ -13,16 +12,8 @@ const fetchBuckets = async () => {
     isLoading.value = true;
     error.value = null;
 
-    const res = await fetch('/api/buckets')
+    buckets.value = await fetchListBuckets()
 
-    if(res.ok) {
-      const data = await res.json()
-      if(data) buckets.value = data
-    }
-
-    if(res.status === 401) {
-      await router.push('/login')
-    }
   } catch (err) {
     console.error("Error fetching buckets:", err);
     error.value = err instanceof Error ? err.message : "Failed to load buckets";

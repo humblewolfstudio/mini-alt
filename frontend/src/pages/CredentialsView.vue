@@ -4,7 +4,7 @@ import {onMounted, ref} from "vue";
 import DeleteModal from "../components/modals/DeleteModal.vue";
 import {getLocaleDate} from "../utils";
 import EditCredentialsModal from "../components/credentials/EditCredentialsModal.vue";
-import {useRouter} from "vue-router";
+import {fetchDeleteCredentials, fetchEditCredentials, fetchListCredentials} from "../sources/CredentialsDataSource";
 
 const showDeleteModal = ref(false)
 const showEditModal = ref(false)
@@ -12,7 +12,6 @@ const data = ref<any | null>(null)
 
 const selectedAccessKey = ref('')
 
-const router = useRouter()
 const isLoading = ref(false)
 const credentials = ref([])
 const error = ref<string | null>(null)
@@ -22,16 +21,7 @@ const fetchCredentials = async () => {
     isLoading.value = true
     error.value = null
 
-    const res = await fetch('/api/credentials')
-
-    if(res.status === 401) {
-      await router.push('/login')
-    }
-
-    if (res.ok) {
-      const data = await res.json()
-      if (data) credentials.value = data
-    }
+    credentials.value = await fetchListCredentials()
   } catch (err) {
     console.error("Error fetching credentials:", err)
     error.value = err instanceof Error ? err.message : "Failed to load credentials"
@@ -55,11 +45,8 @@ const handleDelete = async () => {
   if (selectedAccessKey.value === '') return
 
   try {
-    await fetch('/api/credentials/delete', {
-      method: 'POST',
-      body: JSON.stringify({
-        accessKey: selectedAccessKey.value
-      })
+    await fetchDeleteCredentials({
+      accessKey: selectedAccessKey.value
     })
 
     selectedAccessKey.value = ''
@@ -74,16 +61,15 @@ const handleDelete = async () => {
 const handleEdit = async (data: any) => {
   if (selectedAccessKey.value === '') return
 
+  console.log(data)
+
   try {
-    await fetch('/api/credentials/edit', {
-      method: 'POST',
-      body: JSON.stringify({
-        accessKey: selectedAccessKey.value,
-        name: data.name,
-        description: data.description,
-        status: data.status,
-        expiresAt: data.expiresAt
-      })
+    await fetchEditCredentials({
+      accessKey: selectedAccessKey.value,
+      name: data.name,
+      description: data.description,
+      status: data.status,
+      expiresAt: data.expiresAt
     })
 
     selectedAccessKey.value = ''

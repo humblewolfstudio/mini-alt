@@ -2,6 +2,7 @@
 
 import {useRouter} from "vue-router";
 import {ref} from "vue";
+import {fetchCreateUser} from "../sources/UsersDataSource";
 
 const router = useRouter()
 
@@ -17,28 +18,11 @@ const createUser = async () => {
     isLoading.value = true
     error.value = null
 
-    const res = await fetch('/api/users/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        username: username.value,
-        password: password.value,
-        expiresAt: expiresAt.value
-      })
-    })
+    error.value = await fetchCreateUser({
+      username: username.value,
+      password: password.value,
+      expiresAt: expiresAt.value})
 
-    if(res.status === 401) {
-      await router.push('/login')
-    }
-
-    const data = await res.json()
-    if (res.ok) {
-      await router.push('/users')
-    } else {
-      error.value = data.error || 'Failed to create user'
-    }
   } catch (err) {
     console.error('Error creating user:', err)
     error.value = err instanceof Error ? err.message : 'Failed to create user'
