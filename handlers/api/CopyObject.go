@@ -20,12 +20,7 @@ func (h *Handler) CopyObject(c *gin.Context, bucketName, objectKey, copySource s
 	println("copySource: ", decodedCopySource)
 
 	parts := strings.SplitN(decodedCopySource, "/", 3)
-	/*
-		if len(parts) != 2 {
-		        http.Error(w, "Invalid x-amz-copy-source header", http.StatusBadRequest)
-		        return
-		    }
-	*/
+
 	srcBucketName := parts[0]
 	srcObjectKey := parts[1]
 
