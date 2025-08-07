@@ -3,6 +3,8 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"mini-alt/encoding"
+	"mini-alt/events"
+	"mini-alt/events/types"
 	"mini-alt/utils"
 	"net/http"
 	"strconv"
@@ -115,6 +117,8 @@ func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 	if delimiter != "" {
 		xmlListBucketResult.Delimiter = delimiter
 	}
+
+	events.HandleEventObject(h.Store, types.EventGetPrefix, utils.ClearObjectKeyWithBucket(bucket, delimiter), utils.ClearBucketName(bucket), "")
 
 	c.XML(http.StatusOK, xmlListBucketResult)
 }

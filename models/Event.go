@@ -7,5 +7,7 @@ type Event struct {
 	Name        string
 	Description string
 	BucketId    int64
+	Endpoint    string
+	Token       string
 	CreatedAt   time.Time
 }

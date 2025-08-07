@@ -3,6 +3,8 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"mini-alt/encoding"
+	"mini-alt/events"
+	"mini-alt/events/types"
 	"mini-alt/storage/disk"
 	"mini-alt/utils"
 	"net/http"
@@ -80,6 +82,9 @@ func (h *Handler) CopyObject(c *gin.Context, bucketName, objectKey, copySource s
 	var xmlCopyObjectResult encoding.CopyObjectResult
 
 	xmlCopyObjectResult.LastModified = object.LastModified
+
+	go events.HandleEventObject(h.Store, types.EventCopy, utils.ClearObjectKeyWithBucket(srcBucketName, decodedSrcKey), utils.ClearBucketName(srcBucketName), "")
+	go events.HandleEventObject(h.Store, types.EventCopied, utils.ClearObjectKeyWithBucket(bucketName, decodedDstKey), utils.ClearBucketName(bucketName), "")
 
 	c.XML(http.StatusOK, xmlCopyObjectResult)
 }

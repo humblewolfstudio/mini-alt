@@ -100,6 +100,8 @@ func (s *Store) initSchema() error {
 	    name TEXT UNIQUE NOT NULL,
 	    description TEXT,
 	    bucket_id INTEGER NOT NULL,
+	    endpoint TEXT NOT NULL,
+	    token TEXT,
 	    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 `

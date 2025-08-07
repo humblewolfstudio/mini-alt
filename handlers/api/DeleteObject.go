@@ -2,7 +2,10 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"mini-alt/events"
+	"mini-alt/events/types"
 	"mini-alt/storage/disk"
+	"mini-alt/utils"
 	"net/http"
 )
 
@@ -27,6 +30,8 @@ func (h *Handler) DeleteObject(c *gin.Context) {
 	if err != nil {
 		println(err.Error())
 	}
+
+	go events.HandleEventObject(h.Store, types.EventDelete, utils.ClearObjectKeyWithBucket(bucketName, object), utils.ClearBucketName(bucketName), "")
 
 	c.Status(http.StatusNoContent)
 }

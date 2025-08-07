@@ -2,6 +2,8 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"mini-alt/events"
+	"mini-alt/events/types"
 	"mini-alt/utils"
 	"net/http"
 	"strconv"
@@ -25,6 +27,8 @@ func (h *Handler) HeadObject(c *gin.Context) {
 		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchKey", err.Error(), bucketName)
 		return
 	}
+
+	go events.HandleEventObject(h.Store, types.EventHead, utils.ClearObjectKeyWithBucket(bucketName, objectKey), utils.ClearBucketName(bucketName), "")
 
 	c.Header("Last-Modified", object.LastModified.Format(http.TimeFormat))
 	c.Header("Content-Length", strconv.FormatInt(metadata.ContentLength, 10))
