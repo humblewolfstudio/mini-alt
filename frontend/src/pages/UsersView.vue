@@ -3,13 +3,12 @@
 import {onMounted, ref} from "vue";
 import {getLocaleDate, getLocaleDateTime} from "../utils";
 import DeleteModal from "../components/modals/DeleteModal.vue";
-import {useRouter} from "vue-router";
+import {fetchListUsers} from "../sources/UsersDataSource";
 
 const showDeleteModal = ref(false)
 
 const selectedUser = ref('')
 
-const router = useRouter()
 const isLoading = ref(false)
 const users = ref([])
 const error = ref<string | null>(null)
@@ -19,16 +18,8 @@ const fetchUsers = async () => {
     isLoading.value = true
     error.value = null
 
-    const res = await fetch('/api/users/list')
+    users.value = await fetchListUsers()
 
-    if(res.status === 401) {
-      await router.push('/login')
-    }
-
-    if (res.ok) {
-      const data = await res.json()
-      if (data) users.value = data
-    }
   } catch (err) {
     console.error('Error fetching users:', err)
     error.value = err instanceof Error ? err.message : 'Failed to load users'

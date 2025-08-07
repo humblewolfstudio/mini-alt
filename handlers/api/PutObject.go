@@ -4,6 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"mime"
 	"mime/multipart"
+	"mini-alt/events"
+	eventsTypes "mini-alt/events/types"
 	"mini-alt/storage/disk"
 	"mini-alt/types"
 	"mini-alt/utils"
@@ -139,6 +141,8 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 		HandleError(c, InvalidRequest, bucketName, "Could not create metadata")
 		return
 	}
+
+	go events.HandleEventObject(h.Store, eventsTypes.EventPut, utils.ClearObjectKeyWithBucket(bucketName, objectKey), utils.ClearBucketName(bucketName), "")
 
 	c.Header("ETag", md5)
 	c.Status(http.StatusOK)

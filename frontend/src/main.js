@@ -13,6 +13,8 @@ import CredentialsCreateView from "./pages/CredentialsCreateView.vue";
 import UsersView from "./pages/UsersView.vue";
 import UsersCreateView from "./pages/UsersCreateView.vue";
 import LoginView from "./pages/LoginView.vue";
+import EventsView from "./pages/EventsView.vue";
+import EventsCreateView from "./pages/EventsCreateView.vue";
 
 const routes = [
     { path: '/', component: HomeView },
@@ -23,7 +25,9 @@ const routes = [
     { path: '/credentials/create-credentials', component: CredentialsCreateView },
     { path: '/users', component: UsersView },
     { path: '/users/create-users', component: UsersCreateView },
-    { path: '/login', component: LoginView }
+    { path: '/login', component: LoginView },
+    { path: '/events', component: EventsView },
+    { path: '/events/create-event', component: EventsCreateView },
 ]
 
 const router = createRouter({
@@ -32,3 +36,5 @@ const router = createRouter({
 })
 
 createApp(App).use(router).mount('#app')
+
+export default router

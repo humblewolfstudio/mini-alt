@@ -2,6 +2,8 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"mini-alt/events"
+	"mini-alt/events/types"
 	"mini-alt/storage/disk"
 	"mini-alt/utils"
 	"net/http"
@@ -21,6 +23,8 @@ func (h *Handler) CreateBucket(c *gin.Context, bucketName string) {
 			"Could not create storage directory.", bucketName)
 		return
 	}
+
+	go events.HandleEventBucket(h.Store, types.EventBucketCreated, utils.ClearBucketName(bucketName), "")
 
 	c.Status(http.StatusCreated)
 }

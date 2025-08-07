@@ -27,6 +27,11 @@ const allRoutes = [
     path: '/users',
     name: 'Users',
     icon: 'users'
+  },
+  {
+    path: '/events',
+    name: 'Events',
+    icon: 'events'
   }
 ];
 

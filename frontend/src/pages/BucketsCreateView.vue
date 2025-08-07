@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { fetchCreateBucket } from '../sources/BucketsDataSource';
 
 const router = useRouter();
 const bucketName = ref('');
@@ -19,28 +20,9 @@ const createBucket = async () => {
     error.value = null;
     success.value = null;
 
-    const res = await fetch('/api/buckets', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name: bucketName.value }),
-    });
-
-    if(res.status === 401) {
-      await router.push('/login')
-    }
-
-    if (res.ok) {
-      success.value = 'Bucket created successfully!';
-      bucketName.value = '';
-      setTimeout(() => {
-        router.push('/buckets');
-      }, 1500);
-    } else {
-      const data = await res.json();
-      error.value = data.message || 'Failed to create bucket';
-    }
+    await fetchCreateBucket({
+      name: bucketName.value
+    })
   } catch (err) {
     console.error("Error creating bucket:", err);
     error.value = err instanceof Error ? err.message : "Failed to create bucket";
