@@ -2,8 +2,8 @@ package utils
 
 import "strings"
 
-func ClearBucketName(bucketName string) string {
-	return strings.TrimSuffix(bucketName, "/")
+func ClearInput(input string) string {
+	return strings.TrimPrefix(input, "/")
 }
 
 func ClearObjectKeyWithBucket(bucket, objectKey string) string {

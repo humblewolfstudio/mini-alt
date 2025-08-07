@@ -118,7 +118,7 @@ func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 		xmlListBucketResult.Delimiter = delimiter
 	}
 
-	events.HandleEventObject(h.Store, types.EventGetPrefix, utils.ClearObjectKeyWithBucket(bucket, delimiter), utils.ClearBucketName(bucket), "")
+	events.HandleEventObject(h.Store, types.EventGetPrefix, utils.ClearObjectKeyWithBucket(bucket, delimiter), bucket, "")
 
 	c.XML(http.StatusOK, xmlListBucketResult)
 }

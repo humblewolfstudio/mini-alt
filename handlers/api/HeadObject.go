@@ -11,24 +11,21 @@ import (
 
 // HeadObject returns the metadata of an object.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadObject.html
-func (h *Handler) HeadObject(c *gin.Context) {
-	bucketName := c.Param("bucket")
-	objectKey := c.Param("object")
-
-	object, err := h.Store.GetObject(bucketName, objectKey)
+func (h *Handler) HeadObject(c *gin.Context, bucket, objectKey string) {
+	object, err := h.Store.GetObject(bucket, objectKey)
 
 	if err != nil {
-		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchKey", err.Error(), bucketName)
+		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchKey", err.Error(), bucket)
 		return
 	}
 
 	metadata, err := h.Store.GetMetadata(object.Id)
 	if err != nil {
-		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchKey", err.Error(), bucketName)
+		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchKey", err.Error(), bucket)
 		return
 	}
 
-	go events.HandleEventObject(h.Store, types.EventHead, utils.ClearObjectKeyWithBucket(bucketName, objectKey), utils.ClearBucketName(bucketName), "")
+	go events.HandleEventObject(h.Store, types.EventHead, utils.ClearObjectKeyWithBucket(bucket, objectKey), bucket, "")
 
 	c.Header("Last-Modified", object.LastModified.Format(http.TimeFormat))
 	c.Header("Content-Length", strconv.FormatInt(metadata.ContentLength, 10))

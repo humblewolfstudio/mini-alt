@@ -72,15 +72,16 @@ func BindPutObjectRequest(c *gin.Context) *PutObjectRequest {
 
 // PutObject receives the bucket name, the object key and the object and persists it.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
-func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
-	_, err := h.Store.GetBucket(bucketName)
+func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
+	_, err := h.Store.GetBucket(bucket)
 	if err != nil {
-		_ = h.Store.PutBucket(bucketName)
+		_ = h.Store.PutBucket(bucket)
 	}
 
-	path, err := disk.CreateObjectFilePath(bucketName, objectKey)
+	path, err := disk.CreateObjectFilePath(bucket, objectKey)
 	if err != nil {
-		HandleError(c, InvalidRequest, bucketName, "Could not create objectKey path")
+		println(err.Error())
+		HandleError(c, InvalidRequest, bucket, "Could not create objectKey path")
 		return
 	}
 
@@ -99,24 +100,24 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 	}
 
 	if putObjectRequest.IfMatch != "" {
-		existingObject, err := h.Store.GetObject(bucketName, objectKey)
+		existingObject, err := h.Store.GetObject(bucket, objectKey)
 		if err == nil {
 			etag, err := disk.GetMD5Base64(existingObject.Key)
 			if err == nil && etag != putObjectRequest.IfMatch {
 				c.Header("ETag", etag)
-				HandleError(c, PreconditionFailed, bucketName, "At least one of the preconditions you specified did not hold.")
+				HandleError(c, PreconditionFailed, bucket, "At least one of the preconditions you specified did not hold.")
 				return
 			}
 		}
 	}
 
 	if putObjectRequest.IfNoneMatch != "" {
-		existingObject, err := h.Store.GetObject(bucketName, objectKey)
+		existingObject, err := h.Store.GetObject(bucket, objectKey)
 		if err == nil {
 			etag, err := disk.GetMD5Base64(existingObject.Key)
 			if err == nil && etag == putObjectRequest.IfNoneMatch {
 				c.Header("ETag", etag)
-				HandleError(c, PreconditionFailed, bucketName, "An object already exists with the same ETag.")
+				HandleError(c, PreconditionFailed, bucket, "An object already exists with the same ETag.")
 				return
 			}
 		}
@@ -124,13 +125,13 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 
 	written, err := disk.CreateObject(path, c.Request.Body)
 	if err != nil {
-		HandleError(c, InvalidRequest, bucketName, "Could not write object")
+		HandleError(c, InvalidRequest, bucket, "Could not write object")
 		return
 	}
 
-	object, err := h.Store.PutObject(bucketName, objectKey, written)
+	object, err := h.Store.PutObject(bucket, objectKey, written)
 	if err != nil {
-		HandleError(c, InvalidRequest, bucketName, "Could not create object")
+		HandleError(c, InvalidRequest, bucket, "Could not create object")
 		return
 	}
 
@@ -138,11 +139,11 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 
 	err = h.Store.PutMetadata(object.Id, putObjectRequest.ToMetadata())
 	if err != nil {
-		HandleError(c, InvalidRequest, bucketName, "Could not create metadata")
+		HandleError(c, InvalidRequest, bucket, "Could not create metadata")
 		return
 	}
 
-	go events.HandleEventObject(h.Store, eventsTypes.EventPut, utils.ClearObjectKeyWithBucket(bucketName, objectKey), utils.ClearBucketName(bucketName), "")
+	go events.HandleEventObject(h.Store, eventsTypes.EventPut, utils.ClearObjectKeyWithBucket(bucket, objectKey), utils.ClearInput(bucket), "")
 
 	c.Header("ETag", md5)
 	c.Status(http.StatusOK)
