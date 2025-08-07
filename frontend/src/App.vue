@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import { onMounted, onUnmounted } from "vue";
+import { onMounted } from "vue";
 import Navbar from "./components/Navbar.vue";
 import './assets/tables.css'
 import './assets/forms.css'
