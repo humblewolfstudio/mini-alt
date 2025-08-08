@@ -7,5 +7,5 @@ func ClearInput(input string) string {
 }
 
 func ClearObjectKeyWithBucket(bucket, objectKey string) string {
-	return strings.TrimSuffix(bucket, "/") + "/" + strings.TrimPrefix(objectKey, "/")
+	return bucket + "/" + strings.TrimPrefix(objectKey, "/")
 }
