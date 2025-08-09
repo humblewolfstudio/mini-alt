@@ -40,6 +40,7 @@ onMounted(() => {
           <tr>
             <th>Name</th>
             <th>Description</th>
+            <th>Global</th>
             <th>Created</th>
             <th>Actions</th>
           </tr>
@@ -48,6 +49,7 @@ onMounted(() => {
           <tr v-for="event in events" :key="event.Id">
             <td>{{ event.Name }}</td>
             <td>{{ event.Description }}</td>
+            <td>{{ event.Global }}</td>
             <td>{{ getLocaleDateTime(event.CreatedAt) }}</td>
             <td></td>
           </tr>

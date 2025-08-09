@@ -13,7 +13,7 @@ func (s *Store) ListEvents() ([]models.Event, error) {
 	var events []models.Event
 	for rows.Next() {
 		var event models.Event
-		if err := rows.Scan(&event.Id, &event.Name, &event.Description, &event.BucketId, &event.Endpoint, &event.Token, &event.CreatedAt); err != nil {
+		if err := rows.Scan(&event.Id, &event.Name, &event.Description, &event.BucketId, &event.Endpoint, &event.Token, &event.Global, &event.CreatedAt); err != nil {
 			return nil, err
 		}
 

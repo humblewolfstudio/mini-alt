@@ -11,6 +11,7 @@ type EventRequest struct {
 	Bucket      int64  `json:"bucket"`
 	Endpoint    string `json:"endpoint"`
 	Token       string `json:"token"`
+	Global      bool   `json:"global"`
 }
 
 func (h *Handler) CreateEvent(c *gin.Context) {
@@ -20,7 +21,7 @@ func (h *Handler) CreateEvent(c *gin.Context) {
 		return
 	}
 
-	err := h.Store.CreateEvent(req.Name, req.Description, req.Endpoint, req.Token, req.Bucket)
+	err := h.Store.CreateEvent(req.Name, req.Description, req.Endpoint, req.Token, req.Bucket, req.Global)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

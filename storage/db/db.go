@@ -102,6 +102,7 @@ func (s *Store) initSchema() error {
 	    bucket_id INTEGER NOT NULL,
 	    endpoint TEXT NOT NULL,
 	    token TEXT,
+	    global BOOLEAN DEFAULT FALSE,
 	    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 `

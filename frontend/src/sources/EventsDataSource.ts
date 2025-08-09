@@ -29,7 +29,8 @@ interface CreateEventRequest {
     description: string,
     bucket: number,
     endpoint: string,
-    token: string
+    token: string,
+    global: boolean
 }
 
 export const fetchCreateEvent = async (request: CreateEventRequest) => {
@@ -43,7 +44,8 @@ export const fetchCreateEvent = async (request: CreateEventRequest) => {
             description: request.description,
             bucket: request.bucket,
             endpoint: request.endpoint,
-            token: request.token
+            token: request.token,
+            global: request.global
         })
     })
 

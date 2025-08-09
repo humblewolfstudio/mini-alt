@@ -44,6 +44,10 @@ func HandleEventBucket(db *db.Store, eventName types.EventName, bucket string, a
 	}
 
 	for _, event := range events {
+		if !event.Global {
+			continue
+		}
+
 		evt := types.GlobalEvent{
 			Event: types.Event{
 				EventName: eventName,

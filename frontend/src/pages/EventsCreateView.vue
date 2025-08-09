@@ -12,6 +12,7 @@ const description = ref('')
 const selectedBucket = ref('0')
 const endpoint = ref('')
 const token = ref('')
+const global = ref(false)
 
 const buckets = ref([])
 
@@ -32,7 +33,8 @@ const createEvents = async () => {
       description: description.value,
       bucket,
       endpoint: endpoint.value,
-      token: token.value
+      token: token.value,
+      global: global.value
     })
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to create event'
@@ -101,6 +103,15 @@ onMounted(() => {
           <option v-for="bucket in buckets" :value="bucket.Id" :key="bucket.Id">{{ bucket.Name }}</option>
         </select>
         <p class="hint">Choose a bucket for your event.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="globalToggle">Global event</label>
+        <label class="switch">
+          <input type="checkbox" id="globalToggle" v-model="global" :disabled="isLoading" />
+          <span class="slider"></span>
+        </label>
+        <p class="hint">Toggle to activate or deactivate if the webhook will receive global events or not.</p>
       </div>
 
       <div class="form-group">

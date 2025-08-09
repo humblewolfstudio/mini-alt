@@ -9,5 +9,6 @@ type Event struct {
 	BucketId    int64
 	Endpoint    string
 	Token       string
+	Global      bool
 	CreatedAt   time.Time
 }
