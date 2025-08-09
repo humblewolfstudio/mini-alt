@@ -14,16 +14,14 @@ import (
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObject.html
 func (h *Handler) DeleteObject(c *gin.Context, bucket, objectKey string) {
 	err := h.Store.DeleteObject(bucket, objectKey)
-	if err == nil {
-		err := disk.DeleteObjectFile(bucket, objectKey)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+	if err != nil {
+		handleError(c, FailedToDeleteObject, bucket)
+		return
 	}
 
+	err = disk.DeleteObjectFile(bucket, objectKey)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		handleError(c, FailedToDeleteObjectFile, bucket)
 		return
 	}
 

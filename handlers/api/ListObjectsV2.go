@@ -18,7 +18,7 @@ const MaxObjects = 1000
 func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 	objects, err := h.Store.ListObjects(bucket)
 	if err != nil {
-		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchBucket", "The specified bucket does not exist.", bucket)
+		handleError(c, NoSuchBucket, bucket)
 		return
 	}
 

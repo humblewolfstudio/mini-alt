@@ -6,7 +6,6 @@ import (
 	"mini-alt/events/types"
 	"mini-alt/storage/disk"
 	"mini-alt/utils"
-	"net/http"
 )
 
 // GetObject gets the bucket and the file key and returns the file.
@@ -14,7 +13,7 @@ import (
 func (h *Handler) GetObject(c *gin.Context, bucket string, objectKey string) {
 	path, err := disk.GetObjectPath(bucket, objectKey)
 	if err != nil {
-		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchKey", "Object not found.", bucket)
+		handleError(c, NoSuchKey, bucket)
 		return
 	}
 

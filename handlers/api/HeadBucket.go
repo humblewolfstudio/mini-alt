@@ -15,8 +15,7 @@ func (h *Handler) HeadBucket(c *gin.Context) {
 
 	_, err := h.Store.GetBucket(bucket)
 	if err != nil {
-		println(err.Error())
-		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchBucket", err.Error(), bucket)
+		handleError(c, NoSuchBucket, bucket)
 		return
 	}
 

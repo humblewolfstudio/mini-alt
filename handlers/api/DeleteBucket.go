@@ -15,13 +15,13 @@ import (
 func (h *Handler) DeleteBucket(c *gin.Context) {
 	bucket := utils.ClearInput(c.Param("bucket"))
 	if err := disk.DeleteBucket(bucket); err != nil {
-		utils.RespondS3Error(c, http.StatusInternalServerError, "InternalError", "Could not delete bucket", bucket)
+		handleError(c, FailedToDeleteBucketDirectory, bucket)
 		return
 	}
 
 	err := h.Store.DeleteBucket(bucket)
 	if err != nil {
-		utils.RespondS3Error(c, http.StatusInternalServerError, "InternalError", "Could not delete bucket", bucket)
+		handleError(c, FailedToDeleteBucket, bucket)
 		return
 	}
 

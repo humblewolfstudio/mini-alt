@@ -15,15 +15,7 @@ import (
 	"strings"
 )
 
-type PutObjectErrors string
-
-const (
-	EncryptionTypeMismatch PutObjectErrors = "EncryptionTypeMismatch"
-	InvalidRequest                         = "InvalidRequest"
-	InvalidWriteOffset                     = "InvalidWriteOffset"
-	TooManyParts                           = "TooManyParts"
-	PreconditionFailed                     = "PreconditionFailed"
-)
+type putObjectErrors string
 
 type PutObjectRequest struct {
 	ACL                string `header:"x-amz-acl"`
@@ -81,7 +73,7 @@ func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 	path, err := disk.CreateObjectFilePath(bucket, objectKey)
 	if err != nil {
 		println(err.Error())
-		HandleError(c, InvalidRequest, bucket, "Could not create objectKey path")
+		handlePutObjectError(c, InvalidRequest, bucket, "Could not create objectKey path")
 		return
 	}
 
@@ -105,7 +97,7 @@ func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 			etag, err := disk.GetMD5Base64(existingObject.Key)
 			if err == nil && etag != putObjectRequest.IfMatch {
 				c.Header("ETag", etag)
-				HandleError(c, PreconditionFailed, bucket, "At least one of the preconditions you specified did not hold.")
+				handlePutObjectError(c, PreconditionFailed, bucket, "At least one of the preconditions you specified did not hold.")
 				return
 			}
 		}
@@ -117,7 +109,7 @@ func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 			etag, err := disk.GetMD5Base64(existingObject.Key)
 			if err == nil && etag == putObjectRequest.IfNoneMatch {
 				c.Header("ETag", etag)
-				HandleError(c, PreconditionFailed, bucket, "An object already exists with the same ETag.")
+				handlePutObjectError(c, PreconditionFailed, bucket, "An object already exists with the same ETag.")
 				return
 			}
 		}
@@ -125,13 +117,13 @@ func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 
 	written, err := disk.CreateObject(path, c.Request.Body)
 	if err != nil {
-		HandleError(c, InvalidRequest, bucket, "Could not write object")
+		handlePutObjectError(c, InvalidRequest, bucket, "Could not write object")
 		return
 	}
 
 	object, err := h.Store.PutObject(bucket, objectKey, written)
 	if err != nil {
-		HandleError(c, InvalidRequest, bucket, "Could not create object")
+		handlePutObjectError(c, InvalidRequest, bucket, "Could not create object")
 		return
 	}
 
@@ -139,7 +131,7 @@ func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 
 	err = h.Store.PutMetadata(object.Id, putObjectRequest.ToMetadata())
 	if err != nil {
-		HandleError(c, InvalidRequest, bucket, "Could not create metadata")
+		handlePutObjectError(c, InvalidRequest, bucket, "Could not create metadata")
 		return
 	}
 
@@ -149,7 +141,7 @@ func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 	c.Status(http.StatusOK)
 }
 
-func HandleError(c *gin.Context, err PutObjectErrors, bucket, msg string) {
+func handlePutObjectError(c *gin.Context, err putObjectErrors, bucket, msg string) {
 	switch err {
 	case EncryptionTypeMismatch:
 		utils.RespondS3Error(c, http.StatusBadRequest, "EncryptionTypeMismatch", "The existing object was created with a different encryption type. Subsequent write requests must include the appropriate encryption parameters in the request or while creating the session.", bucket)
