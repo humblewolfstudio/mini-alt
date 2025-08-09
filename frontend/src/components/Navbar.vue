@@ -12,7 +12,6 @@ const toggleCollapse = () => {
 }
 
 const allRoutes = [
-  { path: '/', name: 'Home', icon: 'home' },
   {
     path: '/buckets',
     name: 'Buckets',
@@ -32,7 +31,8 @@ const allRoutes = [
     path: '/events',
     name: 'Events',
     icon: 'events'
-  }
+  },
+  { path: '/metrics', name: 'Metrics', icon: 'metrics' }
 ];
 
 const filteredRoutes = computed(() => {

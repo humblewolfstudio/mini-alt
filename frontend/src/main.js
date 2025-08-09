@@ -17,7 +17,7 @@ import EventsView from "./pages/EventsView.vue";
 import EventsCreateView from "./pages/EventsCreateView.vue";
 
 const routes = [
-    { path: '/', component: HomeView },
+    { path: '/metrics', component: HomeView },
     { path: '/buckets', component: BucketsView },
     { path: '/buckets/create-bucket', component: BucketsCreateView },
     { path: '/buckets/:slug', component: BucketDetailView },
