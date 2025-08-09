@@ -151,4 +151,10 @@ const freePercentDisplay = computed(() => {
   background: #334155;
   align-self: stretch;
 }
+
+@media (max-width: 600px) {
+  .drive-card {
+    flex-direction: column;
+  }
+}
 </style>
