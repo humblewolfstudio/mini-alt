@@ -9,6 +9,7 @@ type UserRegisterRequest struct {
 	Username  string `json:"username"`
 	Password  string `json:"password"`
 	ExpiresAt string `json:"expiresAt"`
+	Admin     bool   `json:"admin"`
 }
 
 func (h *Handler) RegisterUser(c *gin.Context) {
@@ -24,7 +25,7 @@ func (h *Handler) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	err = h.Store.RegisterUser(request.Username, request.Password, accessKey, request.ExpiresAt)
+	err = h.Store.RegisterUser(request.Username, request.Password, accessKey, request.ExpiresAt, request.Admin)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

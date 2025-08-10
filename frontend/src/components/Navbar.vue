@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import {computed, ref} from "vue";
 import {useRoute, useRouter} from 'vue-router';
+import Cookies from "js-cookie";
 
 const isCollapsed = ref(false)
-const isAdmin = ref(true);
+const isAdmin = ref(Cookies.get("admin") === "true");
 const route = useRoute();
 const router = useRouter()
 
@@ -12,13 +13,13 @@ const toggleCollapse = () => {
 }
 
 const adminRoutes = [
-  {path: '/buckets', name: 'Buckets', icon: 'buckets'},
   {path: '/users', name: 'Users', icon: 'users'},
   {path: '/events', name: 'Events', icon: 'events'}
 ];
 
 const userRoutes = [
   {path: '/', name: 'Home', icon: 'home'},
+  {path: '/buckets', name: 'Buckets', icon: 'buckets'},
   {path: '/credentials', name: 'Credentials', icon: 'credentials'},
 ];
 
@@ -180,7 +181,7 @@ const logout = async () => {
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.6);
   padding: 6px 8px;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .administrator-section {

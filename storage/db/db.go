@@ -84,6 +84,7 @@ func (s *Store) initSchema() error {
 	    password TEXT NOT NULL,
 	    token TEXT NOT NULL,
 		access_key TEXT NOT NULL,
+		admin BOOLEAN NOT NULL DEFAULT FALSE,
 	    expires_at DATE DEFAULT NULL,
 	    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
@@ -124,7 +125,7 @@ func (s *Store) SeedInitialData() error {
 		return err
 	}
 
-	err = s.RegisterUser("admin", "admin", accessKey, "")
+	err = s.RegisterUser("admin", "admin", accessKey, "", true)
 
 	if err != nil {
 		return fmt.Errorf("failed to insert default user: %w", err)
