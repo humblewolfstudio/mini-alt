@@ -14,7 +14,7 @@
 - CopyObject [x]
 - MultipartUpload (optional)
 - ListObjectsV2 [x]
-- HeadObject []
+- HeadObject [x]
 
 ## Build for macOS
 ```bash

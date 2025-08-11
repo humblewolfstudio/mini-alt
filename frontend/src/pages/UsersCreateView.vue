@@ -2,12 +2,14 @@
 
 import {useRouter} from "vue-router";
 import {ref} from "vue";
+import {fetchCreateUser} from "../sources/UsersDataSource";
 
 const router = useRouter()
 
 const username = ref('')
 const password = ref('')
 const expiresAt = ref('')
+const admin = ref(false)
 
 const isLoading = ref(false)
 const error = ref<string | null>(null)
@@ -17,24 +19,12 @@ const createUser = async () => {
     isLoading.value = true
     error.value = null
 
-    const res = await fetch('/api/users/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        username: username.value,
-        password: password.value,
-        expiresAt: expiresAt.value
-      })
-    })
+    error.value = await fetchCreateUser({
+      username: username.value,
+      password: password.value,
+      expiresAt: expiresAt.value,
+      admin: admin.value})
 
-    const data = await res.json()
-    if (res.ok) {
-      await router.push('/users')
-    } else {
-      error.value = data.error || 'Failed to create user'
-    }
   } catch (err) {
     console.error('Error creating user:', err)
     error.value = err instanceof Error ? err.message : 'Failed to create user'
@@ -83,6 +73,15 @@ const createUser = async () => {
             :disabled="isLoading"
         />
         <p class="hint">Leave blank for no expiration.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="adminToggle">Administrator</label>
+        <label class="switch">
+          <input type="checkbox" id="adminToggle" v-model="admin" :disabled="isLoading" />
+          <span class="slider"></span>
+        </label>
+        <p class="hint">Toggle to activate or deactivate these credentials.</p>
       </div>
 
       <div class="form-actions">

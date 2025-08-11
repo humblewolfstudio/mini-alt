@@ -4,6 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"mime"
 	"mime/multipart"
+	"mini-alt/events"
+	eventsTypes "mini-alt/events/types"
 	"mini-alt/storage/disk"
 	"mini-alt/types"
 	"mini-alt/utils"
@@ -71,9 +73,15 @@ func BindPutObjectRequest(c *gin.Context) *PutObjectRequest {
 // PutObject receives the bucket name, the object key and the object and persists it.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
 func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
+	user, ok := GetUserFromContext(c)
+	if !ok {
+		utils.RespondS3Error(c, 500, "InternalServerError", "Error retrieving user", bucketName)
+		return
+	}
+
 	_, err := h.Store.GetBucket(bucketName)
 	if err != nil {
-		_ = h.Store.PutBucket(bucketName)
+		_ = h.Store.PutBucket(bucketName, user.Id)
 	}
 
 	path, err := disk.CreateObjectFilePath(bucketName, objectKey)
@@ -139,6 +147,8 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 		HandleError(c, InvalidRequest, bucketName, "Could not create metadata")
 		return
 	}
+
+	go events.HandleEventObject(h.Store, eventsTypes.EventPut, utils.ClearObjectKeyWithBucket(bucketName, objectKey), utils.ClearBucketName(bucketName), "")
 
 	c.Header("ETag", md5)
 	c.Status(http.StatusOK)

@@ -12,12 +12,14 @@ import (
 func SetupAPIRouter(store *db.Store) *gin.Engine {
 	r := gin.New()
 	r.RedirectTrailingSlash = false
+	r.RemoveExtraSlash = true
 	r.Use(customLogger("API-SERVER"))
 
 	h := api.Handler{Store: store}
 
 	r.Use(middlewares.NormalizeObjectKeys())
 	r.Use(middlewares.APIAuthenticationMiddleware(&h))
+	r.Use(middlewares.BucketAuthentication(&h))
 
 	r.GET("/", h.ListBuckets)
 	r.PUT("/:bucket/*object", h.PutObjectOrBucket)
@@ -38,6 +40,8 @@ func SetupWebRouter(store *db.Store) *gin.Engine {
 
 	h := web.Handler{Store: store}
 	r.POST("/api/users/login", h.LoginUser)
+	r.GET("/api/users/logout", h.LogoutUser)
+	r.GET("/api/users/authenticate", h.AuthenticateUser)
 
 	apiGroup := r.Group("/api")
 	apiGroup.Use(middlewares.WebAuthenticationMiddleware(&h))
@@ -57,13 +61,16 @@ func SetupWebRouter(store *db.Store) *gin.Engine {
 		apiGroup.POST("/credentials", h.CreateCredentials)
 		apiGroup.POST("/credentials/delete", h.DeleteCredentials)
 		apiGroup.POST("/credentials/edit", h.CredentialsEdit)
+	}
 
+	apiGroup.Use(middlewares.WebAuthenticationAdminMiddleware(&h))
+	{
 		apiGroup.GET("/users/list", h.ListUsers)
 		apiGroup.POST("/users/register", h.RegisterUser)
 		apiGroup.POST("/users/delete", h.DeleteUser)
-		apiGroup.GET("/users/authenticate", h.AuthenticateUser)
 
-		apiGroup.GET("/users/logout", h.LogoutUser)
+		apiGroup.GET("/events", h.ListEvents)
+		apiGroup.POST("/events", h.CreateEvent)
 	}
 
 	return r

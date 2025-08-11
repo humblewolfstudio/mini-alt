@@ -5,8 +5,8 @@ import (
 	"mini-alt/models"
 )
 
-func (s *Store) ListCredentials() ([]models.Credentials, error) {
-	rows, err := s.db.Query(`SELECT access_key, expires_at, created_at, status, name, description FROM credentials WHERE user = FALSE`)
+func (s *Store) ListCredentials(owner int64) ([]models.Credentials, error) {
+	rows, err := s.db.Query(`SELECT access_key, expires_at, created_at, status, name, description FROM credentials WHERE user = FALSE AND owner = ?`, owner)
 	if err != nil {
 		return nil, err
 	}

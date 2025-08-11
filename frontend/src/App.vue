@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import { onMounted, onUnmounted } from "vue";
+import { onMounted } from "vue";
 import Navbar from "./components/Navbar.vue";
 import './assets/tables.css'
 import './assets/forms.css'
 import './assets/modals.css'
-
-let intervalId: number | undefined;
 
 const route = useRoute();
 const router = useRouter();
@@ -25,13 +23,6 @@ const authenticate = async () => {
 
 onMounted(() => {
   authenticate()
-  intervalId = setInterval(authenticate, 60_000);
-})
-
-onUnmounted(() => {
-  if (intervalId) {
-    clearInterval(intervalId)
-  }
 })
 </script>
 

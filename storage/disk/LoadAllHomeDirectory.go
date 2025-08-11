@@ -73,7 +73,7 @@ func LoadAllHomeDirectory(s *db.Store) error {
 }
 
 func createBucket(s *db.Store, bucketName string) error {
-	if err := s.PutBucket(bucketName); err != nil {
+	if err := s.PutBucket(bucketName, 1); err != nil {
 		return err
 	}
 

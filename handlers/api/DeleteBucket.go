@@ -2,6 +2,8 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"mini-alt/events"
+	"mini-alt/events/types"
 	"mini-alt/storage/disk"
 	"mini-alt/utils"
 	"net/http"
@@ -22,6 +24,8 @@ func (h *Handler) DeleteBucket(c *gin.Context) {
 		utils.RespondS3Error(c, http.StatusInternalServerError, "InternalError", "Could not delete bucket", bucketName)
 		return
 	}
+
+	go events.HandleEventBucket(h.Store, types.EventBucketDeleted, utils.ClearBucketName(bucketName), "")
 
 	c.Status(http.StatusNoContent)
 }

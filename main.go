@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"log"
 	"mini-alt/crons"
+	"mini-alt/events"
 	"mini-alt/jobs"
 	"mini-alt/router"
 	"mini-alt/storage/db"
@@ -34,6 +35,8 @@ func main() {
 	if *loadInitialData {
 		jobs.LoadInitialData(store)
 	}
+
+	events.InitPool(10)
 
 	go startApiServer(store)
 	startWebServer(store)

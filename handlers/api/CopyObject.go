@@ -3,6 +3,8 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"mini-alt/encoding"
+	"mini-alt/events"
+	"mini-alt/events/types"
 	"mini-alt/storage/disk"
 	"mini-alt/utils"
 	"net/http"
@@ -17,15 +19,9 @@ func (h *Handler) CopyObject(c *gin.Context, bucketName, objectKey, copySource s
 	if err != nil {
 		utils.RespondS3Error(c, http.StatusBadRequest, "InvalidSourceKey", "Invalid source object key encoding", "")
 	}
-	println("copySource: ", decodedCopySource)
 
 	parts := strings.SplitN(decodedCopySource, "/", 3)
-	/*
-		if len(parts) != 2 {
-		        http.Error(w, "Invalid x-amz-copy-source header", http.StatusBadRequest)
-		        return
-		    }
-	*/
+
 	srcBucketName := parts[0]
 	srcObjectKey := parts[1]
 
@@ -81,6 +77,9 @@ func (h *Handler) CopyObject(c *gin.Context, bucketName, objectKey, copySource s
 	var xmlCopyObjectResult encoding.CopyObjectResult
 
 	xmlCopyObjectResult.LastModified = object.LastModified
+
+	go events.HandleEventObject(h.Store, types.EventCopy, utils.ClearObjectKeyWithBucket(srcBucketName, decodedSrcKey), utils.ClearBucketName(srcBucketName), "")
+	go events.HandleEventObject(h.Store, types.EventCopied, utils.ClearObjectKeyWithBucket(bucketName, decodedDstKey), utils.ClearBucketName(bucketName), "")
 
 	c.XML(http.StatusOK, xmlCopyObjectResult)
 }

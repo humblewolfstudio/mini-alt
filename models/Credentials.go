@@ -10,5 +10,6 @@ type Credentials struct {
 	Status      bool
 	Name        *string
 	Description *string
+	Owner       int64
 	CreatedAt   time.Time
 }

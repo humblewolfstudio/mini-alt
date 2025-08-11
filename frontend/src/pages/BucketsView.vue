@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
 import {formatSize, getLocaleDateTime} from "../utils";
+import {fetchListBuckets} from "../sources/BucketsDataSource";
 
 const isLoading = ref(false);
 const buckets = ref([]);
@@ -11,12 +12,7 @@ const fetchBuckets = async () => {
     isLoading.value = true;
     error.value = null;
 
-    const res = await fetch('/api/buckets')
-
-    if(res.ok) {
-      const data = await res.json()
-      if(data) buckets.value = data
-    }
+    buckets.value = await fetchListBuckets()
 
   } catch (err) {
     console.error("Error fetching buckets:", err);
@@ -54,7 +50,7 @@ onMounted(() => {
             <td>{{ bucket.Name }}</td>
             <td>{{ bucket.NumberObjects }}</td>
             <td>{{ formatSize(bucket.Size) }}</td>
-            <td>{{getLocaleDateTime(bucket.CreatedAt)}}</td>
+            <td>{{ getLocaleDateTime(bucket.CreatedAt) }}</td>
             <td>
               <RouterLink :to="'/buckets/' + bucket.Name">View</RouterLink>
             </td>
@@ -82,18 +78,5 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.error-message {
-  color: #ff4444;
-  padding: 15px;
-  text-align: center;
-  background-color: #ffeeee;
-  border-radius: 4px;
-  margin-top: 10px;
-}
 
-.empty-message {
-  padding: 15px;
-  text-align: center;
-  color: #888;
-}
 </style>

@@ -36,5 +36,10 @@ func (h *Handler) PutBucket(c *gin.Context) {
 		return
 	}
 
+	err = h.Store.AddBucketOwner(name, id.(int64))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, bucket)
 }
