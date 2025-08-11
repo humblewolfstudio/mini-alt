@@ -12,6 +12,7 @@ import (
 func SetupAPIRouter(store *db.Store) *gin.Engine {
 	r := gin.New()
 	r.RedirectTrailingSlash = false
+	r.RemoveExtraSlash = true
 	r.Use(customLogger("API-SERVER"))
 
 	h := api.Handler{Store: store}
