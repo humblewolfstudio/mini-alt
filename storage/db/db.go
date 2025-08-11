@@ -36,6 +36,7 @@ func (s *Store) initSchema() error {
 	CREATE TABLE IF NOT EXISTS buckets (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT UNIQUE NOT NULL,
+		owner INTEGER,
 		created_at DATETIME NOT NULL
 	);
 
@@ -75,6 +76,7 @@ func (s *Store) initSchema() error {
 		status BOOLEAN NOT NULL DEFAULT TRUE,
 		name TEXT,
 		description TEXT,
+		owner INTEGER NOT NULL,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 
@@ -120,13 +122,17 @@ func (s *Store) SeedInitialData() error {
 	if count > 0 {
 		return nil
 	}
-	accessKey, _, err := s.CreateCredentials("", "", "", true)
+	accessKey, _, err := s.CreateCredentials("", "", "", true, 1)
 	if err != nil {
 		return err
 	}
 
-	err = s.RegisterUser("admin", "admin", accessKey, "", true)
+	id, err := s.RegisterUser("admin", "admin", accessKey, "", true)
+	if err != nil {
+		return fmt.Errorf("failed to insert default user: %w", err)
+	}
 
+	err = s.AddCredentialsOwner(accessKey, id)
 	if err != nil {
 		return fmt.Errorf("failed to insert default user: %w", err)
 	}

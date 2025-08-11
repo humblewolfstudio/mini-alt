@@ -10,7 +10,7 @@ func (s *Store) AuthenticateAdmin(id int64, token string) error {
 	if err != nil {
 		return err
 	}
-	println(user.Admin)
+
 	if !user.Admin {
 		return errors.New("user is not admin")
 	}

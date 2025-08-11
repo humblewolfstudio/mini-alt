@@ -64,7 +64,7 @@ func WebAuthenticationAdminMiddleware(h *web.Handler) gin.HandlerFunc {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		println(idInt64)
+
 		err = h.Store.AuthenticateAdmin(idInt64, token)
 		if err != nil {
 			c.AbortWithStatus(http.StatusUnauthorized)

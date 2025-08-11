@@ -19,13 +19,19 @@ func (h *Handler) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	accessKey, _, err := h.Store.CreateCredentials("", "", request.ExpiresAt, true)
+	accessKey, _, err := h.Store.CreateCredentials("", "", request.ExpiresAt, true, -1)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = h.Store.RegisterUser(request.Username, request.Password, accessKey, request.ExpiresAt, request.Admin)
+	newId, err := h.Store.RegisterUser(request.Username, request.Password, accessKey, request.ExpiresAt, request.Admin)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = h.Store.AddCredentialsOwner(accessKey, newId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -18,6 +18,7 @@ func SetupAPIRouter(store *db.Store) *gin.Engine {
 
 	r.Use(middlewares.NormalizeObjectKeys())
 	r.Use(middlewares.APIAuthenticationMiddleware(&h))
+	r.Use(middlewares.BucketAuthentication(&h))
 
 	r.GET("/", h.ListBuckets)
 	r.PUT("/:bucket/*object", h.PutObjectOrBucket)
