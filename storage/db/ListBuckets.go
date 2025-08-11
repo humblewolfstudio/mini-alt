@@ -5,23 +5,30 @@ import (
 	"mini-alt/models"
 )
 
-func (s *Store) ListBuckets() ([]models.Bucket, error) {
+func (s *Store) ListBuckets(owner int64) ([]models.Bucket, error) {
 	query := `
 		SELECT 
 			b.id,
 			b.name,
 			b.created_at,
-			IFNULL(COUNT(o.id), 0) as number_objects,
-			IFNULL(SUM(o.size), 0) as total_size
+			IFNULL(COUNT(o.id), 0) AS number_objects,
+			IFNULL(SUM(o.size), 0) AS total_size
 		FROM 
 			buckets b
 		LEFT JOIN 
 			objects o ON o.bucket_name = b.name
+		WHERE 
+			b.owner = ? 
+			OR EXISTS (
+				SELECT 1 
+				FROM users u 
+				WHERE u.id = ? AND u.admin = 1
+			)
 		GROUP BY 
 			b.id, b.name, b.created_at
 	`
 
-	rows, err := s.db.Query(query)
+	rows, err := s.db.Query(query, owner, owner)
 	if err != nil {
 		return nil, err
 	}

@@ -2,7 +2,7 @@ package db
 
 import "mini-alt/utils"
 
-func (s *Store) CreateCredentials(name, description, expiresAt string, user bool) (accessKey, secretKey string, err error) {
+func (s *Store) CreateCredentials(name, description, expiresAt string, user bool, owner int64) (accessKey, secretKey string, err error) {
 	accessKey = utils.GenerateRandomKey(16)
 	secretKey = utils.GenerateRandomKey(32)
 
@@ -18,7 +18,7 @@ func (s *Store) CreateCredentials(name, description, expiresAt string, user bool
 		expiresAtValue = expiresAt
 	}
 
-	_, err = s.db.Exec(`INSERT INTO credentials (access_key, secret_key_encrypted, user, expires_at, name, description) VALUES (?, ?, ?, ?, ?, ?)`, accessKey, encryptedSecret, user, expiresAtValue, name, description)
+	_, err = s.db.Exec(`INSERT INTO credentials (access_key, secret_key_encrypted, user, expires_at, name, description, owner) VALUES (?, ?, ?, ?, ?, ?, ?)`, accessKey, encryptedSecret, user, expiresAtValue, name, description, owner)
 	if err != nil {
 		return "", "", err
 	}

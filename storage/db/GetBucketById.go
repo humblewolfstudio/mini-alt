@@ -6,7 +6,7 @@ func (s *Store) GetBucketById(bucketId int64) (models.Bucket, error) {
 	row := s.db.QueryRow(`SELECT * FROM buckets WHERE id = ?`, bucketId)
 
 	var b models.Bucket
-	if err := row.Scan(&b.Id, &b.Name, &b.CreatedAt); err != nil {
+	if err := row.Scan(&b.Id, &b.Name, &b.Owner, &b.CreatedAt); err != nil {
 		return models.Bucket{}, err
 	}
 

@@ -73,9 +73,15 @@ func BindPutObjectRequest(c *gin.Context) *PutObjectRequest {
 // PutObject receives the bucket name, the object key and the object and persists it.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
 func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
+	user, ok := GetUserFromContext(c)
+	if !ok {
+		utils.RespondS3Error(c, 500, "InternalServerError", "Error retrieving user", bucketName)
+		return
+	}
+
 	_, err := h.Store.GetBucket(bucketName)
 	if err != nil {
-		_ = h.Store.PutBucket(bucketName)
+		_ = h.Store.PutBucket(bucketName, user.Id)
 	}
 
 	path, err := disk.CreateObjectFilePath(bucketName, objectKey)

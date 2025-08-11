@@ -19,7 +19,8 @@ export const fetchListCredentials = async (): Promise<Credential[]> => {
     }
 
     if (res.ok) {
-        return await res.json()
+        const data = await res.json()
+        if(data) return data
     }
 
     return []
