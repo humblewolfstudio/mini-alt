@@ -40,7 +40,6 @@ func (s *Store) ListBuckets(owner int64) ([]models.Bucket, error) {
 	for rows.Next() {
 		var b models.Bucket
 		if err := rows.Scan(&b.Id, &b.Name, &b.CreatedAt, &b.NumberObjects, &b.Size); err != nil {
-			println(err.Error())
 			return nil, err
 		}
 		buckets = append(buckets, b)

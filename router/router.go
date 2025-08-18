@@ -71,6 +71,9 @@ func SetupWebRouter(store *db.Store) *gin.Engine {
 
 		apiGroup.GET("/events", h.ListEvents)
 		apiGroup.POST("/events", h.CreateEvent)
+
+		apiGroup.GET("/system/specs", h.GetSystemSpecs)
+		apiGroup.GET("/system/info", h.GetServerInformation)
 	}
 
 	return r
