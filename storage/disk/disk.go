@@ -9,7 +9,7 @@ import (
 // ----------------- Buckets -----------------
 
 func CreateBucket(bucket string) error {
-	return createBucketDir(bucket)
+	return createBucket(bucket)
 }
 
 func DeleteBucket(bucket string) error {
@@ -18,7 +18,7 @@ func DeleteBucket(bucket string) error {
 		return fmt.Errorf("invalid bucket name")
 	}
 
-	return deleteBucketDir(bucket)
+	return deleteBucket(bucket)
 }
 
 // ----------------- Objects -----------------

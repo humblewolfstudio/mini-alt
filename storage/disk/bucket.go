@@ -7,25 +7,28 @@ import (
 	"strings"
 )
 
-func createBucketDir(bucket string) error {
-	rootDir, err := getBucketsPath()
+func createBucket(bucket string) error {
+	path, err := getSafeBucketPath(bucket)
 	if err != nil {
 		return err
 	}
 
-	path := filepath.Join(rootDir, bucket)
 	err = os.MkdirAll(path, os.ModePerm)
 
 	return err
 }
 
-func deleteBucketDir(bucket string) error {
+func deleteBucket(bucket string) error {
 	rootDir, err := getBucketsPath()
 	if err != nil {
 		return err
 	}
 
-	deletePath := filepath.Join(rootDir, bucket)
+	deletePath, err := getSafeBucketPath(bucket)
+	if err != nil {
+		return err
+	}
+
 	absoluteRootDir, err := filepath.Abs(rootDir)
 	if err != nil {
 		return fmt.Errorf("failed to get absolute path for buckets directory: %w", err)

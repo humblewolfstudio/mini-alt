@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 )
@@ -118,4 +120,50 @@ func getAppSupportPath() (string, error) {
 	}
 
 	return baseDir, nil
+}
+
+var bucketNameRegex = regexp.MustCompile(`^[a-z0-9]([a-z0-9.-]{1,61}[a-z0-9])?$`)
+
+func getSafeBucketPath(bucket string) (string, error) {
+	if bucket == "" || bucket == "." {
+		return "", fmt.Errorf("invalid empty bucket name")
+	}
+
+	if filepath.IsAbs(bucket) {
+		return "", fmt.Errorf("invalid absolute bucket name: %s", bucket)
+	}
+
+	cleanedBucket := filepath.Clean(bucket)
+	if cleanedBucket == ".." || strings.HasPrefix(cleanedBucket, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("bucket name escapes base directory: %s", bucket)
+	}
+
+	if len(cleanedBucket) < 3 || len(cleanedBucket) > 63 {
+		return "", fmt.Errorf("bucket name must be between 3 and 63 characters: %s", bucket)
+	}
+
+	if !bucketNameRegex.MatchString(cleanedBucket) {
+		return "", fmt.Errorf("bucket name contains invalid characters or format: %s", bucket)
+	}
+
+	if strings.Contains(cleanedBucket, "..") {
+		return "", fmt.Errorf("bucket name cannot contain consecutive dots: %s", bucket)
+	}
+
+	if net.ParseIP(cleanedBucket) != nil {
+		return "", fmt.Errorf("bucket name cannot be an IP address: %s", bucket)
+	}
+
+	rootDir, err := getBucketsPath()
+	if err != nil {
+		return "", err
+	}
+
+	fullPath := filepath.Join(rootDir, cleanedBucket)
+	rel, err := filepath.Rel(rootDir, fullPath)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return "", fmt.Errorf("bucket path escapes base directory: %s", bucket)
+	}
+
+	return fullPath, nil
 }
