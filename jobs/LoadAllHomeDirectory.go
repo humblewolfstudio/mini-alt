@@ -1,4 +1,4 @@
-package disk
+package jobs
 
 import (
 	"crypto/md5"
@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"mime"
 	"mini-alt/storage/db"
+	"mini-alt/storage/disk"
 	"mini-alt/types"
 	"net/http"
 	"os"
@@ -15,7 +16,7 @@ import (
 
 // LoadAllHomeDirectory loads all existing buckets and their objects from disk into the database.
 func LoadAllHomeDirectory(s *db.Store) error {
-	bucketsDir, err := GetBucketsDir()
+	bucketsDir, err := disk.GetBucketsPath()
 	if err != nil {
 		return err
 	}
@@ -77,7 +78,7 @@ func createBucket(s *db.Store, bucketName string) error {
 		return err
 	}
 
-	if err := CreateBucket(bucketName); err != nil {
+	if err := disk.CreateBucket(bucketName); err != nil {
 		return err
 	}
 

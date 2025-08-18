@@ -43,7 +43,7 @@ func main() {
 }
 
 func startDatabase() *db.Store {
-	configDir, err := disk.GetAppConfigDir()
+	configDir, err := disk.GetAppConfigPath()
 	if err != nil {
 		log.Fatal(err)
 	}

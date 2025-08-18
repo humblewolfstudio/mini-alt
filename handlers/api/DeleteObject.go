@@ -19,9 +19,8 @@ func (h *Handler) DeleteObject(c *gin.Context) {
 	// Also delete all files
 	err := h.Store.DeleteObject(bucketName, object)
 	if err == nil {
-		err := disk.DeleteObjectFile(bucketName, object)
+		err := disk.DeleteObject(bucketName, object)
 		if err != nil {
-			println(err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
