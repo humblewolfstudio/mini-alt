@@ -39,7 +39,7 @@ func isFirstStartup(store *db.Store) (bool, error) {
 }
 
 func setLoadedInitialData(store *db.Store) {
-	err := db.SetConfig(store, "LOADED_INITIAL_DATA", "true")
+	err := db.PutConfig(store, "LOADED_INITIAL_DATA", "true")
 	if err != nil {
 		fmt.Printf("Error setting initial data: %v\n", err)
 	}
