@@ -5,16 +5,13 @@ import (
 	"encoding/base64"
 	"io"
 	"os"
-	"path/filepath"
 )
 
 func getMD5Base64(bucket, key string) (string, error) {
-	rootDir, err := getBucketsPath()
+	path, err := getSafeObjectPath(bucket, key)
 	if err != nil {
 		return "", err
 	}
-
-	path := filepath.Join(rootDir, bucket, key)
 
 	file, err := os.Open(path)
 	if err != nil {
