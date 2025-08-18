@@ -1,8 +1,6 @@
 package disk
 
-import (
-	"syscall"
-)
+import "syscall"
 
 type SystemSpecs struct {
 	TotalCapacity uint64
@@ -11,10 +9,10 @@ type SystemSpecs struct {
 	DrivePath     string
 }
 
-func GetSystemSpecs() (SystemSpecs, error) {
+func getSystemSpecs() (SystemSpecs, error) {
 	var stat syscall.Statfs_t
 
-	path, err := GetAppSupportDir()
+	path, err := getAppSupportPath()
 	if err != nil {
 		return SystemSpecs{}, err
 	}

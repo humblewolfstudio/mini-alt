@@ -48,9 +48,7 @@ func (h *Handler) CopyObject(c *gin.Context, bucketName, objectKey, copySource s
 		return
 	}
 
-	endPath, err := disk.GetObjectPath(bucketName, decodedDstKey)
-
-	written, err := disk.CreateObject(endPath, srcFile)
+	written, err := disk.PutObject(bucketName, decodedDstKey, srcFile)
 	if err != nil {
 		utils.RespondS3Error(c, http.StatusInternalServerError, "CouldNotWrite", "Could not write the Object.", bucketName)
 		return

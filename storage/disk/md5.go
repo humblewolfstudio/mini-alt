@@ -3,23 +3,28 @@ package disk
 import (
 	"crypto/md5"
 	"encoding/base64"
-	"fmt"
 	"io"
 	"os"
 )
 
-func GetMD5Base64(path string) (string, error) {
+func getMD5Base64(bucket, key string) (string, error) {
+	path, err := getSafeObjectPath(bucket, key)
+	if err != nil {
+		return "", err
+	}
+
 	file, err := os.Open(path)
 	if err != nil {
-		return "", fmt.Errorf("failed to open file: %w", err)
+		return "", err
 	}
+
 	defer func(file *os.File) {
 		_ = file.Close()
 	}(file)
 
 	hash := md5.New()
 	if _, err := io.Copy(hash, file); err != nil {
-		return "", fmt.Errorf("failed to hash object: %w", err)
+		return "", err
 	}
 
 	hashSum := hash.Sum(nil)

@@ -84,12 +84,6 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 		_ = h.Store.PutBucket(bucketName, user.Id)
 	}
 
-	path, err := disk.CreateObjectFilePath(bucketName, objectKey)
-	if err != nil {
-		HandleError(c, InvalidRequest, bucketName, "Could not create objectKey path")
-		return
-	}
-
 	putObjectRequest := BindPutObjectRequest(c)
 
 	if c.Request.MultipartForm != nil {
@@ -107,7 +101,7 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 	if putObjectRequest.IfMatch != "" {
 		existingObject, err := h.Store.GetObject(bucketName, objectKey)
 		if err == nil {
-			etag, err := disk.GetMD5Base64(existingObject.Key)
+			etag, err := disk.GetMD5Base64(bucketName, existingObject.Key)
 			if err == nil && etag != putObjectRequest.IfMatch {
 				c.Header("ETag", etag)
 				HandleError(c, PreconditionFailed, bucketName, "At least one of the preconditions you specified did not hold.")
@@ -119,7 +113,7 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 	if putObjectRequest.IfNoneMatch != "" {
 		existingObject, err := h.Store.GetObject(bucketName, objectKey)
 		if err == nil {
-			etag, err := disk.GetMD5Base64(existingObject.Key)
+			etag, err := disk.GetMD5Base64(bucketName, existingObject.Key)
 			if err == nil && etag == putObjectRequest.IfNoneMatch {
 				c.Header("ETag", etag)
 				HandleError(c, PreconditionFailed, bucketName, "An object already exists with the same ETag.")
@@ -128,7 +122,7 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 		}
 	}
 
-	written, err := disk.CreateObject(path, c.Request.Body)
+	written, err := disk.PutObject(bucketName, objectKey, c.Request.Body)
 	if err != nil {
 		HandleError(c, InvalidRequest, bucketName, "Could not write object")
 		return
@@ -140,7 +134,7 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 		return
 	}
 
-	md5, err := disk.GetMD5Base64(path)
+	md5, err := disk.GetMD5Base64(bucketName, objectKey)
 
 	err = h.Store.PutMetadata(object.Id, putObjectRequest.ToMetadata())
 	if err != nil {
