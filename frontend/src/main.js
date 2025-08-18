@@ -4,7 +4,7 @@ import App from './App.vue'
 
 import {createRouter, createWebHistory} from 'vue-router'
 
-import HomeView from './pages/HomeView.vue'
+import MetricsView from './pages/MetricsView.vue'
 import BucketsCreateView from "./pages/BucketsCreateView.vue";
 import BucketsView from "./pages/BucketsView.vue";
 import BucketDetailView from "./pages/BucketDetailView.vue";
@@ -17,7 +17,7 @@ import EventsView from "./pages/EventsView.vue";
 import EventsCreateView from "./pages/EventsCreateView.vue";
 
 const routes = [
-    { path: '/metrics', component: HomeView },
+    { path: '/metrics', component: MetricsView },
     { path: '/buckets', component: BucketsView },
     { path: '/buckets/create-bucket', component: BucketsCreateView },
     { path: '/buckets/:slug', component: BucketDetailView },
