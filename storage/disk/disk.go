@@ -1,7 +1,6 @@
 package disk
 
 import (
-	"fmt"
 	"io"
 	"os"
 )
@@ -13,11 +12,6 @@ func CreateBucket(bucket string) error {
 }
 
 func DeleteBucket(bucket string) error {
-	// TODO: confirm the name in the API endpoint...
-	if bucket == "" || bucket == "." || bucket == "/" {
-		return fmt.Errorf("invalid bucket name")
-	}
-
 	return deleteBucket(bucket)
 }
 
