@@ -40,7 +40,7 @@ const handleContinue = () => {
   <div class="modal-overlay">
     <div class="modal">
       <div class="modal-header">
-        <h2>New Credentials</h2>
+        <h2>Edit Credentials</h2>
         <button class="close-btn" @click="emit('close')">×</button>
       </div>
 

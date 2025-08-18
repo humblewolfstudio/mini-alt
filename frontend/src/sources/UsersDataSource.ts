@@ -28,7 +28,8 @@ export const fetchListUsers = async (): Promise<User[]> => {
 interface CreateUserRequest {
     username: string,
     password: string,
-    expiresAt: string
+    expiresAt: string,
+    admin: boolean
 }
 
 export const fetchCreateUser = async (request: CreateUserRequest): Promise<string> => {

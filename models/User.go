@@ -8,6 +8,7 @@ type User struct {
 	Password  string
 	Token     string
 	AccessKey string
+	Admin     bool
 	ExpiresAt *time.Time
 	CreatedAt time.Time
 }

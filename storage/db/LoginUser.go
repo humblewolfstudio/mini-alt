@@ -8,6 +8,7 @@ import (
 type LoginResponse struct {
 	Id    int64
 	Token string
+	Admin bool
 }
 
 func (s *Store) LoginUser(username, password string) (LoginResponse, error) {
@@ -32,5 +33,5 @@ func (s *Store) LoginUser(username, password string) (LoginResponse, error) {
 		return LoginResponse{}, err
 	}
 
-	return LoginResponse{Id: user.Id, Token: token}, nil
+	return LoginResponse{Id: user.Id, Token: token, Admin: user.Admin}, nil
 }

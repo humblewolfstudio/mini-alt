@@ -9,6 +9,7 @@ const router = useRouter()
 const username = ref('')
 const password = ref('')
 const expiresAt = ref('')
+const admin = ref(false)
 
 const isLoading = ref(false)
 const error = ref<string | null>(null)
@@ -21,7 +22,8 @@ const createUser = async () => {
     error.value = await fetchCreateUser({
       username: username.value,
       password: password.value,
-      expiresAt: expiresAt.value})
+      expiresAt: expiresAt.value,
+      admin: admin.value})
 
   } catch (err) {
     console.error('Error creating user:', err)
@@ -71,6 +73,15 @@ const createUser = async () => {
             :disabled="isLoading"
         />
         <p class="hint">Leave blank for no expiration.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="adminToggle">Administrator</label>
+        <label class="switch">
+          <input type="checkbox" id="adminToggle" v-model="admin" :disabled="isLoading" />
+          <span class="slider"></span>
+        </label>
+        <p class="hint">Toggle to activate or deactivate these credentials.</p>
       </div>
 
       <div class="form-actions">
