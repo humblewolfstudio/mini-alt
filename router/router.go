@@ -6,6 +6,7 @@ import (
 	"mini-alt/handlers/api"
 	"mini-alt/handlers/web"
 	"mini-alt/middlewares"
+	"mini-alt/storage"
 	"mini-alt/storage/db"
 )
 
@@ -15,7 +16,7 @@ func SetupAPIRouter(store *db.Store) *gin.Engine {
 	r.RemoveExtraSlash = true
 	r.Use(customLogger("API-SERVER"))
 
-	h := api.Handler{Store: store}
+	h := api.Handler{Store: store, Storage: storage.NewStorage(store)}
 
 	r.Use(middlewares.NormalizeObjectKeys())
 	r.Use(middlewares.APIAuthenticationMiddleware(&h))
