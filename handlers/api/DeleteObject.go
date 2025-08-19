@@ -12,25 +12,20 @@ import (
 // DeleteObject receives the key of the file and removes that file.
 // If no file is found, it does not return an error, it just returns.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObject.html
-func (h *Handler) DeleteObject(c *gin.Context) {
-	bucketName := c.Param("bucket")
-	object := c.Param("object")
-
-	// Also delete all files
-	err := h.Store.DeleteObject(bucketName, object)
-	if err == nil {
-		err := disk.DeleteObject(bucketName, object)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-	}
-
+func (h *Handler) DeleteObject(c *gin.Context, bucket, objectKey string) {
+	err := h.Store.DeleteObject(bucket, objectKey)
 	if err != nil {
-		println(err.Error())
+		handleError(c, FailedToDeleteObject, bucket)
+		return
 	}
 
-	go events.HandleEventObject(h.Store, types.EventDelete, utils.ClearObjectKeyWithBucket(bucketName, object), utils.ClearBucketName(bucketName), "")
+	err = disk.DeleteObject(bucket, objectKey)
+	if err != nil {
+		handleError(c, FailedToDeleteObjectFile, bucket)
+		return
+	}
+
+	go events.HandleEventObject(h.Store, types.EventDelete, utils.ClearObjectKeyWithBucket(bucket, objectKey), bucket, "")
 
 	c.Status(http.StatusNoContent)
 }

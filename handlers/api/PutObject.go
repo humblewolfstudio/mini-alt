@@ -15,15 +15,7 @@ import (
 	"strings"
 )
 
-type PutObjectErrors string
-
-const (
-	EncryptionTypeMismatch PutObjectErrors = "EncryptionTypeMismatch"
-	InvalidRequest                         = "InvalidRequest"
-	InvalidWriteOffset                     = "InvalidWriteOffset"
-	TooManyParts                           = "TooManyParts"
-	PreconditionFailed                     = "PreconditionFailed"
-)
+type putObjectErrors string
 
 type PutObjectRequest struct {
 	ACL                string `header:"x-amz-acl"`
@@ -72,16 +64,16 @@ func BindPutObjectRequest(c *gin.Context) *PutObjectRequest {
 
 // PutObject receives the bucket name, the object key and the object and persists it.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
-func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
+func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 	user, ok := GetUserFromContext(c)
 	if !ok {
-		utils.RespondS3Error(c, 500, "InternalServerError", "Error retrieving user", bucketName)
+		utils.RespondS3Error(c, 500, "InternalServerError", "Error retrieving user", bucket)
 		return
 	}
 
-	_, err := h.Store.GetBucket(bucketName)
+	_, err := h.Store.GetBucket(bucket)
 	if err != nil {
-		_ = h.Store.PutBucket(bucketName, user.Id)
+		_ = h.Store.PutBucket(bucket, user.Id)
 	}
 
 	putObjectRequest := BindPutObjectRequest(c)
@@ -99,57 +91,56 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 	}
 
 	if putObjectRequest.IfMatch != "" {
-		existingObject, err := h.Store.GetObject(bucketName, objectKey)
+		existingObject, err := h.Store.GetObject(bucket, objectKey)
 		if err == nil {
-			etag, err := disk.GetMD5Base64(bucketName, existingObject.Key)
+			etag, err := disk.GetMD5Base64(bucket, existingObject.Key)
 			if err == nil && etag != putObjectRequest.IfMatch {
 				c.Header("ETag", etag)
-				HandleError(c, PreconditionFailed, bucketName, "At least one of the preconditions you specified did not hold.")
+				handlePutObjectError(c, PreconditionFailed, bucket, "At least one of the preconditions you specified did not hold.")
 				return
 			}
 		}
 	}
 
 	if putObjectRequest.IfNoneMatch != "" {
-		existingObject, err := h.Store.GetObject(bucketName, objectKey)
+		existingObject, err := h.Store.GetObject(bucket, objectKey)
 		if err == nil {
-			etag, err := disk.GetMD5Base64(bucketName, existingObject.Key)
+			etag, err := disk.GetMD5Base64(bucket, existingObject.Key)
 			if err == nil && etag == putObjectRequest.IfNoneMatch {
 				c.Header("ETag", etag)
-				HandleError(c, PreconditionFailed, bucketName, "An object already exists with the same ETag.")
+				handlePutObjectError(c, PreconditionFailed, bucket, "An object already exists with the same ETag.")
 				return
 			}
 		}
 	}
 
-	written, err := disk.PutObject(bucketName, objectKey, c.Request.Body)
+	written, err := disk.PutObject(bucket, objectKey, c.Request.Body)
 	if err != nil {
-		HandleError(c, InvalidRequest, bucketName, "Could not write object")
+		handlePutObjectError(c, InvalidRequest, bucket, "Could not write object")
 		return
 	}
 
-	object, err := h.Store.PutObject(bucketName, objectKey, written)
+	object, err := h.Store.PutObject(bucket, objectKey, written)
 	if err != nil {
-		println(err.Error())
-		HandleError(c, InvalidRequest, bucketName, "Could not create object")
+		handlePutObjectError(c, InvalidRequest, bucket, "Could not create object")
 		return
 	}
 
-	md5, err := disk.GetMD5Base64(bucketName, objectKey)
+	md5, err := disk.GetMD5Base64(bucket, objectKey)
 
 	err = h.Store.PutMetadata(object.Id, putObjectRequest.ToMetadata())
 	if err != nil {
-		HandleError(c, InvalidRequest, bucketName, "Could not create metadata")
+		handlePutObjectError(c, InvalidRequest, bucket, "Could not create metadata")
 		return
 	}
 
-	go events.HandleEventObject(h.Store, eventsTypes.EventPut, utils.ClearObjectKeyWithBucket(bucketName, objectKey), utils.ClearBucketName(bucketName), "")
+	go events.HandleEventObject(h.Store, eventsTypes.EventPut, utils.ClearObjectKeyWithBucket(bucket, objectKey), utils.ClearInput(bucket), "")
 
 	c.Header("ETag", md5)
 	c.Status(http.StatusOK)
 }
 
-func HandleError(c *gin.Context, err PutObjectErrors, bucket, msg string) {
+func handlePutObjectError(c *gin.Context, err putObjectErrors, bucket, msg string) {
 	switch err {
 	case EncryptionTypeMismatch:
 		utils.RespondS3Error(c, http.StatusBadRequest, "EncryptionTypeMismatch", "The existing object was created with a different encryption type. Subsequent write requests must include the appropriate encryption parameters in the request or while creating the session.", bucket)

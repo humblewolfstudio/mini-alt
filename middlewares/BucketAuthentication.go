@@ -9,6 +9,11 @@ import (
 
 func BucketAuthentication(h *api.Handler) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if val, ok := c.Get("presignedAuth"); ok && val == true {
+			c.Next()
+			return
+		}
+
 		accessKey, exists := c.Get("accessKey")
 		if !exists {
 			respondS3Error(c, "InternalServerError", "User accessKey not found in context")

@@ -11,26 +11,23 @@ import (
 
 // CreateBucket receives the name of the new bucket and creates the bucket.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html
-func (h *Handler) CreateBucket(c *gin.Context, bucketName string) {
+func (h *Handler) CreateBucket(c *gin.Context, bucket string) {
 	user, ok := GetUserFromContext(c)
 	if !ok {
-		utils.RespondS3Error(c, 500, "InternalServerError", "Error retrieving user", bucketName)
+		utils.RespondS3Error(c, 500, "InternalServerError", "Error retrieving user", bucket)
 		return
 	}
 
-	if err := h.Store.PutBucket(bucketName, user.Id); err != nil {
-		utils.RespondS3Error(c, http.StatusConflict, "BucketAlreadyExists",
-			"The requested bucket name is not available.", bucketName)
+	if err := h.Store.PutBucket(bucket, user.Id); err != nil {
+		handleError(c, BucketAlreadyExists, bucket)
+	}
+
+	if err := disk.CreateBucket(bucket); err != nil {
+		handleError(c, FailedToCreateBucket, bucket)
 		return
 	}
 
-	if err := disk.CreateBucket(bucketName); err != nil {
-		utils.RespondS3Error(c, http.StatusInternalServerError, "InternalError",
-			"Could not create storage directory.", bucketName)
-		return
-	}
-
-	go events.HandleEventBucket(h.Store, types.EventBucketCreated, utils.ClearBucketName(bucketName), "")
+	go events.HandleEventBucket(h.Store, types.EventBucketCreated, bucket, "")
 
 	c.Status(http.StatusCreated)
 }
