@@ -66,6 +66,12 @@ func PresignedAuthMiddleware(h *api.Handler) gin.HandlerFunc {
 			return
 		}
 
+		user, err := h.Store.GetUserByAccessKey(parsed.AccessKeyID)
+		if err != nil {
+			respondS3Error(c, "InternalServerError", err.Error())
+			return
+		}
+		c.Set("user", user)
 		c.Set("presignedAuth", true)
 		c.Next()
 	}

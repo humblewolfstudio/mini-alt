@@ -20,7 +20,7 @@ func (h *Handler) CopyObject(c *gin.Context, bucket, objectKey, copySource strin
 		utils.RespondS3Error(c, http.StatusBadRequest, "InvalidSourceKey", "Invalid source object key encoding", "")
 	}
 
-	parts := strings.SplitN(decodedCopySource, "/", 3)
+	parts := strings.SplitN(decodedCopySource, "/", 2)
 
 	srcBucket := parts[0]
 	srcObjectKey := utils.ClearInput(parts[1])
