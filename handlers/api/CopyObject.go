@@ -66,7 +66,7 @@ func (h *Handler) CopyObject(c *gin.Context, bucketName, objectKey, copySource s
 		return
 	}
 
-	err = h.Store.MetadataCopy(oldObject.Id, object.Id)
+	err = h.Store.CopyMetadata(oldObject.Id, object.Id)
 	if err != nil {
 		utils.RespondS3Error(c, http.StatusInternalServerError, "CouldNotWrite", "Could not copy the metadata.", bucketName)
 		return

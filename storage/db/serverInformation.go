@@ -6,7 +6,7 @@ type ServerInformation struct {
 	Usage         int64
 }
 
-func (s *Store) GetServerInformation() (*ServerInformation, error) {
+func (s *Store) getServerInformation() (*ServerInformation, error) {
 	query := `
 		SELECT
 			COUNT(DISTINCT b.id) AS total_buckets,

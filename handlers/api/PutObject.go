@@ -130,6 +130,7 @@ func (h *Handler) PutObject(c *gin.Context, bucketName, objectKey string) {
 
 	object, err := h.Store.PutObject(bucketName, objectKey, written)
 	if err != nil {
+		println(err.Error())
 		HandleError(c, InvalidRequest, bucketName, "Could not create object")
 		return
 	}
