@@ -23,11 +23,11 @@ func createTestClient() *s3.S3 {
 		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
 		Credentials: credentials.NewStaticCredentials(
-			"4Wy2POm5lPF0wXlF",
-			"RL8W1BajIOqNP1P2DdHxPstnuNSriclB",
-			"",
-		),
+			"0GNTGAiAxRywL5KI",
+			"zj9VXm1q9bE8n9OEsgglpqec9DBtkkZe",
+			""),
 	}
+
 	sess := session.Must(session.NewSession(cfg))
 	return s3.New(sess)
 }

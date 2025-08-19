@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"mini-alt/storage/db"
-	"mini-alt/storage/disk"
 )
 
 func LoadInitialData(store *db.Store) {
@@ -19,7 +18,7 @@ func LoadInitialData(store *db.Store) {
 		return
 	}
 
-	err = disk.LoadAllHomeDirectory(store)
+	err = LoadAllHomeDirectory(store)
 	if err != nil {
 		fmt.Printf("Error loading home directory: %v\n", err)
 		return
@@ -40,7 +39,7 @@ func isFirstStartup(store *db.Store) (bool, error) {
 }
 
 func setLoadedInitialData(store *db.Store) {
-	err := db.SetConfig(store, "LOADED_INITIAL_DATA", "true")
+	err := db.PutConfig(store, "LOADED_INITIAL_DATA", "true")
 	if err != nil {
 		fmt.Printf("Error setting initial data: %v\n", err)
 	}

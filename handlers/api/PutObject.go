@@ -65,16 +65,15 @@ func BindPutObjectRequest(c *gin.Context) *PutObjectRequest {
 // PutObject receives the bucket name, the object key and the object and persists it.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
 func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
-	_, err := h.Store.GetBucket(bucket)
-	if err != nil {
-		_ = h.Store.PutBucket(bucket)
+	user, ok := GetUserFromContext(c)
+	if !ok {
+		utils.RespondS3Error(c, 500, "InternalServerError", "Error retrieving user", bucket)
+		return
 	}
 
-	path, err := disk.CreateObjectFilePath(bucket, objectKey)
+	_, err := h.Store.GetBucket(bucket)
 	if err != nil {
-		println(err.Error())
-		handlePutObjectError(c, InvalidRequest, bucket, "Could not create objectKey path")
-		return
+		_ = h.Store.PutBucket(bucket, user.Id)
 	}
 
 	putObjectRequest := BindPutObjectRequest(c)
@@ -94,7 +93,7 @@ func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 	if putObjectRequest.IfMatch != "" {
 		existingObject, err := h.Store.GetObject(bucket, objectKey)
 		if err == nil {
-			etag, err := disk.GetMD5Base64(existingObject.Key)
+			etag, err := disk.GetMD5Base64(bucket, existingObject.Key)
 			if err == nil && etag != putObjectRequest.IfMatch {
 				c.Header("ETag", etag)
 				handlePutObjectError(c, PreconditionFailed, bucket, "At least one of the preconditions you specified did not hold.")
@@ -106,7 +105,7 @@ func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 	if putObjectRequest.IfNoneMatch != "" {
 		existingObject, err := h.Store.GetObject(bucket, objectKey)
 		if err == nil {
-			etag, err := disk.GetMD5Base64(existingObject.Key)
+			etag, err := disk.GetMD5Base64(bucket, existingObject.Key)
 			if err == nil && etag == putObjectRequest.IfNoneMatch {
 				c.Header("ETag", etag)
 				handlePutObjectError(c, PreconditionFailed, bucket, "An object already exists with the same ETag.")
@@ -115,7 +114,7 @@ func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 		}
 	}
 
-	written, err := disk.CreateObject(path, c.Request.Body)
+	written, err := disk.PutObject(bucket, objectKey, c.Request.Body)
 	if err != nil {
 		handlePutObjectError(c, InvalidRequest, bucket, "Could not write object")
 		return
@@ -127,7 +126,7 @@ func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 		return
 	}
 
-	md5, err := disk.GetMD5Base64(path)
+	md5, err := disk.GetMD5Base64(bucket, objectKey)
 
 	err = h.Store.PutMetadata(object.Id, putObjectRequest.ToMetadata())
 	if err != nil {

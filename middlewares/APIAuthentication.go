@@ -63,6 +63,7 @@ func APIAuthenticationMiddleware(h *api.Handler) gin.HandlerFunc {
 			return
 		}
 
+		c.Set("accessKey", parsedAuth.AccessKeyID)
 		c.Next()
 	}
 }

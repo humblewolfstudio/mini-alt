@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import {computed, ref} from "vue";
 import {useRoute, useRouter} from 'vue-router';
+import Cookies from "js-cookie";
 
 const isCollapsed = ref(false)
-const isAdmin = ref(true);
+const isAdmin = ref(Cookies.get("admin") === "true");
 const route = useRoute();
 const router = useRouter()
 
@@ -11,34 +12,24 @@ const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
 }
 
-const allRoutes = [
-  { path: '/', name: 'Home', icon: 'home' },
-  {
-    path: '/buckets',
-    name: 'Buckets',
-    icon: 'buckets'
-  },
-  {
-    path: '/credentials',
-    name: 'Credentials',
-    icon: 'credentials'
-  },
-  {
-    path: '/users',
-    name: 'Users',
-    icon: 'users'
-  },
-  {
-    path: '/events',
-    name: 'Events',
-    icon: 'events'
-  }
+const adminRoutes = [
+  {path: '/users', name: 'Users', icon: 'users'},
+  {path: '/events', name: 'Events', icon: 'events'},
+  {path: '/metrics', name: 'Metrics', icon: 'metrics'}
 ];
 
-const filteredRoutes = computed(() => {
-  return isAdmin.value
-      ? allRoutes
-      : allRoutes.filter(route => route.path === '/');
+const userRoutes = [
+  {path: '/', name: 'Home', icon: 'home'},
+  {path: '/buckets', name: 'Buckets', icon: 'buckets'},
+  {path: '/credentials', name: 'Credentials', icon: 'credentials'},
+];
+
+const filteredAdminRoutes = computed(() => {
+  return isAdmin.value ? adminRoutes : [];
+});
+
+const filteredUserRoutes = computed(() => {
+  return userRoutes;
 });
 
 const isActive = (navItem: any) => {
@@ -69,27 +60,47 @@ const logout = async () => {
     </button>
 
     <div class="navbar-content">
-      <!-- Top navigation links -->
       <nav class="nav-links">
+        <div class="nav-section-title">User</div>
+
         <RouterLink
-            v-for="route in filteredRoutes"
+            v-for="route in filteredUserRoutes"
             :key="route.path"
             :to="route.path"
             class="nav-link"
             :class="{ 'router-link-exact-active': isActive(route) }"
         >
           <div class="icon-container">
-            <img class="nav-icon" :src="'/icons/' + route.icon + '.svg'" width="25" height="25"  :alt="route.name"/>
+            <img class="nav-icon" :src="'/icons/' + route.icon + '.svg'" width="25" height="25" :alt="route.name"/>
           </div>
           <div class="text-container">
             <span class="nav-text">{{ route.name }}</span>
           </div>
         </RouterLink>
+
+        <template v-if="filteredAdminRoutes.length">
+          <div class="nav-section-title administrator-section">Administration</div>
+
+          <RouterLink
+              v-for="route in filteredAdminRoutes"
+              :key="route.path"
+              :to="route.path"
+              class="nav-link"
+              :class="{ 'router-link-exact-active': isActive(route) }"
+          >
+            <div class="icon-container">
+              <img class="nav-icon" :src="'/icons/' + route.icon + '.svg'" width="25" height="25" :alt="route.name"/>
+            </div>
+            <div class="text-container">
+              <span class="nav-text">{{ route.name }}</span>
+            </div>
+          </RouterLink>
+        </template>
       </nav>
 
       <button @click="logout" class="nav-link logout-btn">
         <div class="icon-container">
-          <img class="nav-icon" src="/icons/logout.svg" width="25" height="25" alt="Logout" />
+          <img class="nav-icon" src="/icons/logout.svg" width="25" height="25" alt="Logout"/>
         </div>
         <div class="text-container">
           <span class="nav-text">Logout</span>
@@ -165,6 +176,19 @@ const logout = async () => {
   cursor: pointer;
 }
 
+.nav-section-title {
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 6px 8px;
+  letter-spacing: 1px;
+}
+
+.administrator-section {
+  margin-top: 50px;
+}
+
 .icon-container {
   width: 25px;
   height: 25px;
@@ -177,9 +201,8 @@ const logout = async () => {
 .text-container {
   overflow: hidden;
   margin-left: 12px;
-  transition:
-      opacity var(--transition-duration) ease,
-      margin var(--transition-duration) ease;
+  transition: opacity var(--transition-duration) ease,
+  margin var(--transition-duration) ease;
 }
 
 .nav-text {

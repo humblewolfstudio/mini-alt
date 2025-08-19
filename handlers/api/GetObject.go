@@ -11,7 +11,7 @@ import (
 // GetObject gets the bucket and the file key and returns the file.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html
 func (h *Handler) GetObject(c *gin.Context, bucket string, objectKey string) {
-	path, err := disk.GetObjectPath(bucket, objectKey)
+	path, err := disk.GetSafeObjectPath(bucket, objectKey)
 	if err != nil {
 		handleError(c, NoSuchKey, bucket)
 		return

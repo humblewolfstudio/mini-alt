@@ -105,10 +105,14 @@ const handleRename = async ({ newName }: { newName: string }) => {
   if (!itemToModify.value) return
 
   const oldKey = itemToModify.value.key
-  const pathParts = oldKey.split('/')
+
+  const trimmedKey = oldKey.endsWith('/') ? oldKey.slice(0, -1) : oldKey
+
+  const pathParts = trimmedKey.split('/')
   pathParts.pop()
-  pathParts.pop()
-  const newKey = pathParts.join('/') + (pathParts.length > 0 ? '/' : '') + newName
+  const newKey =
+      pathParts.join('/') + (pathParts.length > 0 ? '/' : '') + newName +
+      (oldKey.endsWith('/') ? '/' : '')
 
   try {
     await fetch('/api/files/rename', {
@@ -127,6 +131,7 @@ const handleRename = async ({ newName }: { newName: string }) => {
     showRenameModal.value = false
   }
 }
+
 
 const handleMove = async ({ destinationPath }: { destinationPath: string }) => {
   if (!itemToModify.value) return

@@ -20,7 +20,8 @@ func (h *Handler) CopyObject(c *gin.Context, bucket, objectKey, copySource strin
 		utils.RespondS3Error(c, http.StatusBadRequest, "InvalidSourceKey", "Invalid source object key encoding", "")
 	}
 
-	parts := strings.SplitN(decodedCopySource, "/", 2)
+	parts := strings.SplitN(decodedCopySource, "/", 3)
+
 	srcBucket := parts[0]
 	srcObjectKey := utils.ClearInput(parts[1])
 
@@ -42,9 +43,7 @@ func (h *Handler) CopyObject(c *gin.Context, bucket, objectKey, copySource strin
 		return
 	}
 
-	endPath, err := disk.GetObjectPath(bucket, decodedDstKey)
-
-	written, err := disk.CreateObject(endPath, srcFile)
+	written, err := disk.PutObject(bucket, decodedDstKey, srcFile)
 	if err != nil {
 		utils.RespondS3Error(c, http.StatusInternalServerError, "CouldNotWrite", "Could not write the Object.", bucket)
 		return
@@ -62,7 +61,7 @@ func (h *Handler) CopyObject(c *gin.Context, bucket, objectKey, copySource strin
 		return
 	}
 
-	err = h.Store.MetadataCopy(oldObject.Id, object.Id)
+	err = h.Store.CopyMetadata(oldObject.Id, object.Id)
 	if err != nil {
 		utils.RespondS3Error(c, http.StatusInternalServerError, "CouldNotWrite", "Could not copy the metadata.", bucket)
 		return

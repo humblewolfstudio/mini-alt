@@ -7,5 +7,6 @@ type Bucket struct {
 	Name          string
 	NumberObjects int64
 	Size          int64
+	Owner         int64
 	CreatedAt     time.Time
 }

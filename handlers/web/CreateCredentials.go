@@ -18,7 +18,13 @@ func (h *Handler) CreateCredentials(c *gin.Context) {
 		return
 	}
 
-	accessKey, secretKey, err := h.Store.CreateCredentials(request.Name, request.Description, request.ExpiresAt, false)
+	id, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user ID not found in context"})
+		return
+	}
+
+	accessKey, secretKey, err := h.Store.PutCredentials(request.Name, request.Description, request.ExpiresAt, false, id.(int64))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

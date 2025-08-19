@@ -26,6 +26,7 @@ func (h *Handler) LoginUser(c *gin.Context) {
 
 	c.SetCookie("id", strconv.FormatInt(res.Id, 10), 3600, "/", "", false, true)
 	c.SetCookie("token", res.Token, 3600, "/", "", false, true)
+	c.SetCookie("admin", strconv.FormatBool(res.Admin), 3600, "/", "", false, false)
 
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
 }

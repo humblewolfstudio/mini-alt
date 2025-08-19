@@ -19,7 +19,7 @@ func (h *Handler) DeleteObject(c *gin.Context, bucket, objectKey string) {
 		return
 	}
 
-	err = disk.DeleteObjectFile(bucket, objectKey)
+	err = disk.DeleteObject(bucket, objectKey)
 	if err != nil {
 		handleError(c, FailedToDeleteObjectFile, bucket)
 		return
