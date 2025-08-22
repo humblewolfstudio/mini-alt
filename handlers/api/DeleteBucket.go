@@ -16,6 +16,7 @@ func (h *Handler) DeleteBucket(c *gin.Context) {
 	ok, e := h.Storage.DeleteBucket(bucket)
 	if !ok {
 		utils.HandleError(c, e, bucket)
+		return
 	}
 
 	go events.HandleEventBucket(h.Store, types.EventBucketDeleted, bucket, "")

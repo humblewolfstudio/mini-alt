@@ -13,13 +13,14 @@ import (
 func (h *Handler) PutBucket(c *gin.Context, bucket string) {
 	user, ok := GetUserFromContext(c)
 	if !ok {
-		utils.HandleError(c, utils.InternalServerError, "Could not get user from context")
+		utils.HandleError(c, utils.InternalServerError, bucket)
 		return
 	}
 
 	ok, e := h.Storage.PutBucket(bucket, user.Id)
 	if !ok {
 		utils.HandleError(c, e, bucket)
+		return
 	}
 
 	go events.HandleEventBucket(h.Store, types.EventBucketCreated, bucket, "")

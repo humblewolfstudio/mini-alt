@@ -14,7 +14,7 @@ import (
 func (h *Handler) ListBuckets(c *gin.Context) {
 	user, ok := GetUserFromContext(c)
 	if !ok {
-		utils.HandleError(c, utils.InternalServerError, "Could not get user from context")
+		utils.HandleError(c, utils.InternalServerError, "*")
 		return
 	}
 
