@@ -18,7 +18,7 @@ const MaxObjects = 1000
 func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 	objects, err := h.Store.ListObjects(bucket)
 	if err != nil {
-		handleError(c, NoSuchBucket, bucket)
+		utils.HandleError(c, utils.NoSuchBucket, bucket)
 		return
 	}
 

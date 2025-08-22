@@ -12,10 +12,9 @@ import (
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadBucket.html
 func (h *Handler) HeadBucket(c *gin.Context) {
 	bucket := utils.ClearInput(c.Param("bucket"))
-
-	_, err := h.Store.GetBucket(bucket)
-	if err != nil {
-		handleError(c, NoSuchBucket, bucket)
+	ok, e := h.Storage.HeadBucket(bucket)
+	if !ok {
+		utils.HandleError(c, e, bucket)
 		return
 	}
 

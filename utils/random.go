@@ -2,6 +2,7 @@ package utils
 
 import "math/rand"
 
+//goland:noinspection SpellCheckingInspection
 func GenerateRandomKey(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
 	b := make([]byte, length)

@@ -29,7 +29,7 @@ func (h *Handler) PutObjectOrBucket(c *gin.Context) {
 	}
 
 	if objectKey == "/" || objectKey == "" {
-		h.CreateBucket(c, bucket)
+		h.PutBucket(c, bucket)
 		return
 	}
 

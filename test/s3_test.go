@@ -1,4 +1,4 @@
-package storage_test
+package test
 
 import (
 	"bytes"
@@ -38,7 +38,7 @@ func createTempBucket(t *testing.T, s3Client *s3.S3) string {
 		Bucket: aws.String(bucket),
 	})
 	if err != nil {
-		t.Fatalf("CreateBucket failed: %v", err)
+		t.Fatalf("PutBucket failed: %v", err)
 	}
 	return bucket
 }

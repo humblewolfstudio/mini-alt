@@ -87,3 +87,12 @@ func (s *Store) addBucketOwner(bucketName string, bucketOwner int64) error {
 	_, err := s.db.Exec(`UPDATE buckets SET owner = ? WHERE name = ?;`, bucketOwner, bucketName)
 	return err
 }
+
+func (s *Store) bucketHasObjects(bucket string) (bool, error) {
+	var exists bool
+	err := s.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM objects WHERE bucket_name = ?)`, bucket).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}

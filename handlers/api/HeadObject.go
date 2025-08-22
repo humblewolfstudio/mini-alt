@@ -12,16 +12,9 @@ import (
 // HeadObject returns the metadata of an object.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadObject.html
 func (h *Handler) HeadObject(c *gin.Context, bucket, objectKey string) {
-	object, err := h.Store.GetObject(bucket, objectKey)
-
-	if err != nil {
-		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchKey", err.Error(), bucket)
-		return
-	}
-
-	metadata, err := h.Store.GetMetadata(object.Id)
-	if err != nil {
-		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchKey", err.Error(), bucket)
+	object, metadata, e := h.Storage.HeadObject(bucket, objectKey)
+	if e != "" {
+		utils.HandleError(c, e, bucket)
 		return
 	}
 
