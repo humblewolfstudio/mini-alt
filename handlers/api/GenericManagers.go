@@ -12,10 +12,9 @@ func (h *Handler) GetObjectOrList(c *gin.Context) {
 
 	if objectKey == "/" || objectKey == "" {
 		h.ListObjectsV2(c, bucket)
-		return
+	} else {
+		h.GetObject(c, bucket, objectKey)
 	}
-
-	h.GetObject(c, bucket, objectKey)
 }
 
 // PutObjectOrBucket receives the endpoint of creating an object or a bucket (due to gin problem with * endpoints).
@@ -25,15 +24,11 @@ func (h *Handler) PutObjectOrBucket(c *gin.Context) {
 
 	if copySource := utils.ClearInput(c.GetHeader("x-amz-copy-source")); copySource != "" {
 		h.CopyObject(c, bucket, objectKey, copySource)
-		return
+	} else if objectKey == "/" || objectKey == "" {
+		h.PutBucket(c, bucket)
+	} else {
+		h.PutObject(c, bucket, objectKey)
 	}
-
-	if objectKey == "/" || objectKey == "" {
-		h.CreateBucket(c, bucket)
-		return
-	}
-
-	h.PutObject(c, bucket, objectKey)
 }
 
 // DeleteObjectOrBucket receives the endpoint of deleting an object or a bucket (due to gin problem with * endpoints).
@@ -43,10 +38,9 @@ func (h *Handler) DeleteObjectOrBucket(c *gin.Context) {
 
 	if objectKey == "/" || objectKey == "" {
 		h.DeleteBucket(c)
-		return
+	} else {
+		h.DeleteObject(c, bucket, objectKey)
 	}
-
-	h.DeleteObject(c, bucket, objectKey)
 }
 
 // HeadObjectOrBucket receives the endpoint of returning the metadata of an object or a bucket.
@@ -56,8 +50,7 @@ func (h *Handler) HeadObjectOrBucket(c *gin.Context) {
 
 	if objectKey == "/" || objectKey == "" {
 		h.HeadBucket(c)
-		return
+	} else {
+		h.HeadObject(c, bucket, objectKey)
 	}
-
-	h.HeadObject(c, bucket, objectKey)
 }

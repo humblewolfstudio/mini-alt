@@ -42,6 +42,10 @@ func (s *Store) AddBucketOwner(bucketName string, bucketOwner int64) error {
 	return s.addBucketOwner(bucketName, bucketOwner)
 }
 
+func (s *Store) BucketHasObjects(bucket string) (bool, error) {
+	return s.bucketHasObjects(bucket)
+}
+
 // ----------------- Users -------------------
 
 func (s *Store) GetUser(username string) (models.User, error) {

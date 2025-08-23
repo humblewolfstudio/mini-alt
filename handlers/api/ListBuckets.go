@@ -14,11 +14,11 @@ import (
 func (h *Handler) ListBuckets(c *gin.Context) {
 	user, ok := GetUserFromContext(c)
 	if !ok {
-		utils.RespondS3Error(c, 500, "InternalServerError", "Error retrieving user", "")
+		utils.HandleError(c, utils.InternalServerError, "*")
 		return
 	}
 
-	buckets, _ := h.Store.ListBuckets(user.Id)
+	buckets := h.Storage.ListBuckets(user.Id)
 	var xmlBuckets []encoding.BucketXML
 
 	for _, bucket := range buckets {

@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"mini-alt/events"
 	"mini-alt/events/types"
-	"mini-alt/storage/disk"
 	"mini-alt/utils"
 	"net/http"
 )
@@ -14,14 +13,9 @@ import (
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteBucket.html
 func (h *Handler) DeleteBucket(c *gin.Context) {
 	bucket := utils.ClearInput(c.Param("bucket"))
-	if err := disk.DeleteBucket(bucket); err != nil {
-		handleError(c, FailedToDeleteBucketDirectory, bucket)
-		return
-	}
-
-	err := h.Store.DeleteBucket(bucket)
-	if err != nil {
-		handleError(c, FailedToDeleteBucket, bucket)
+	ok, e := h.Storage.DeleteBucket(bucket)
+	if !ok {
+		utils.HandleError(c, e, bucket)
 		return
 	}
 

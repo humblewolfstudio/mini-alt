@@ -15,8 +15,6 @@ import (
 	"strings"
 )
 
-type putObjectErrors string
-
 type PutObjectRequest struct {
 	ACL                string `header:"x-amz-acl"`
 	CacheControl       string `header:"Cache-Control"`
@@ -67,13 +65,8 @@ func BindPutObjectRequest(c *gin.Context) *PutObjectRequest {
 func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 	user, ok := GetUserFromContext(c)
 	if !ok {
-		utils.RespondS3Error(c, 500, "InternalServerError", "Error retrieving user", bucket)
+		utils.HandleError(c, utils.InternalServerError, "Could not get user from context")
 		return
-	}
-
-	_, err := h.Store.GetBucket(bucket)
-	if err != nil {
-		_ = h.Store.PutBucket(bucket, user.Id)
 	}
 
 	putObjectRequest := BindPutObjectRequest(c)
@@ -96,7 +89,7 @@ func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 			etag, err := disk.GetMD5Base64(bucket, existingObject.Key)
 			if err == nil && etag != putObjectRequest.IfMatch {
 				c.Header("ETag", etag)
-				handlePutObjectError(c, PreconditionFailed, bucket, "At least one of the preconditions you specified did not hold.")
+				utils.HandleError(c, utils.PreconditionFailed, bucket)
 				return
 			}
 		}
@@ -108,51 +101,22 @@ func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 			etag, err := disk.GetMD5Base64(bucket, existingObject.Key)
 			if err == nil && etag == putObjectRequest.IfNoneMatch {
 				c.Header("ETag", etag)
-				handlePutObjectError(c, PreconditionFailed, bucket, "An object already exists with the same ETag.")
+				utils.HandleError(c, utils.PreconditionFailed, bucket)
 				return
 			}
 		}
 	}
 
-	written, err := disk.PutObject(bucket, objectKey, c.Request.Body)
-	if err != nil {
-		handlePutObjectError(c, InvalidRequest, bucket, "Could not write object")
-		return
-	}
-
-	object, err := h.Store.PutObject(bucket, objectKey, written)
-	if err != nil {
-		handlePutObjectError(c, InvalidRequest, bucket, "Could not create object")
-		return
-	}
-
-	md5, err := disk.GetMD5Base64(bucket, objectKey)
-
-	err = h.Store.PutMetadata(object.Id, putObjectRequest.ToMetadata())
-	if err != nil {
-		handlePutObjectError(c, InvalidRequest, bucket, "Could not create metadata")
+	etag, e := h.Storage.PutObject(bucket, objectKey, c.Request.Body, putObjectRequest.ToMetadata(), user.Id)
+	if e != "" {
+		utils.HandleError(c, e, bucket)
 		return
 	}
 
 	go events.HandleEventObject(h.Store, eventsTypes.EventPut, utils.ClearObjectKeyWithBucket(bucket, objectKey), utils.ClearInput(bucket), "")
 
-	c.Header("ETag", md5)
+	c.Header("ETag", etag)
 	c.Status(http.StatusOK)
-}
-
-func handlePutObjectError(c *gin.Context, err putObjectErrors, bucket, msg string) {
-	switch err {
-	case EncryptionTypeMismatch:
-		utils.RespondS3Error(c, http.StatusBadRequest, "EncryptionTypeMismatch", "The existing object was created with a different encryption type. Subsequent write requests must include the appropriate encryption parameters in the request or while creating the session.", bucket)
-	case InvalidRequest:
-		utils.RespondS3Error(c, http.StatusBadRequest, "InvalidRequest", msg, bucket)
-	case InvalidWriteOffset:
-		utils.RespondS3Error(c, http.StatusBadRequest, "InvalidWriteOffset", "The write offset value that you specified does not match the current object size.", bucket)
-	case TooManyParts:
-		utils.RespondS3Error(c, http.StatusBadRequest, "TooManyParts", "You have attempted to add more parts than the maximum of 10000 that are allowed for this object. You can use the CopyObject operation to copy this object to another and then add more data to the newly copied object.", bucket)
-	case PreconditionFailed:
-		utils.RespondS3Error(c, http.StatusPreconditionFailed, "PreconditionFailed", msg, bucket)
-	}
 }
 
 func fillMissingMetadataFromFile(fileHeader *multipart.FileHeader, req *PutObjectRequest) *PutObjectRequest {
