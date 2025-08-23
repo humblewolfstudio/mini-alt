@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - develop
+      - features/automated-test
 
 jobs:
   test:
