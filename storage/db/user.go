@@ -2,6 +2,7 @@ package db
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"mini-alt/models"
 	"mini-alt/utils"
@@ -204,4 +205,18 @@ func (s *Store) registerUser(username, password, accessKey, expiresAt string, ad
 	}
 
 	return userID, nil
+}
+
+func (s *Store) existsTestUser() (bool, error) {
+	var count int
+	err := s.db.QueryRow(`SELECT COUNT(*) FROM users where username = 'test'`).Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("failed to count users: %w", err)
+	}
+
+	if count > 0 {
+		return true, nil
+	}
+
+	return false, nil
 }

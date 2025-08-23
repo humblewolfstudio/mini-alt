@@ -1,0 +1,45 @@
+name: Go Tests with Server
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - features/automated-test
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+
+      - name: Build server
+        run: go build -o server main.go
+
+      - name: Start server with -test
+        run: ./server -test &
+
+      - name: Wait for server
+        run: |
+          for i in {1..10}; do
+            if nc -z localhost 9000; then
+              echo "Server is up!"
+              exit 0
+            fi
+            echo "Waiting for server..."
+            sleep 2
+          done
+          echo "Server did not start in time" && exit 1
+
+      - name: Run tests
+        env:
+          AWS_ACCESS_KEY_ID: zAYWfUfum6mKhLbK
+          AWS_SECRET_ACCESS_KEY: mNcRRjk4Uy9eFnzIUHANbnRtnKQsFi2I
+        run: go test ./mini-alt/test/...

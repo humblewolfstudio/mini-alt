@@ -7,25 +7,36 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/joho/godotenv"
 	"io"
+	"log"
 	"mini-alt/utils"
+	"os"
 	"strings"
 	"testing"
 )
 
 func createTestClient() *s3.S3 {
+	loadEnv()
+
 	cfg := &aws.Config{
 		Region:           aws.String("us-east-1"),
 		Endpoint:         aws.String("http://localhost:9000"),
 		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
-		Credentials: credentials.NewStaticCredentials(
-			"0GNTGAiAxRywL5KI",
-			"zj9VXm1q9bE8n9OEsgglpqec9DBtkkZe",
-			""),
+		Credentials:      credentials.NewEnvCredentials(),
 	}
 	sess := session.Must(session.NewSession(cfg))
 	return s3.New(sess)
+}
+
+func loadEnv() {
+	if os.Getenv("APP_ENV") != "production" {
+		err := godotenv.Load("../.env")
+		if err != nil {
+			log.Println("Warning: Error loading .env file - relying on system environment variables")
+		}
+	}
 }
 
 func createTempBucket(t *testing.T, s3Client *s3.S3) string {

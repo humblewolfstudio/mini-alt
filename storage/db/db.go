@@ -88,6 +88,10 @@ func (s *Store) RegisterUser(username, password, accessKey, expiresAt string, ad
 	return s.registerUser(username, password, accessKey, expiresAt, admin)
 }
 
+func (s *Store) ExistsTestUser() (bool, error) {
+	return s.existsTestUser()
+}
+
 // ----------------- Objects -----------------
 
 func (s *Store) GetObject(bucket, key string) (models.Object, error) {
@@ -132,6 +136,10 @@ func (s *Store) ListCredentials(owner int64) ([]models.Credentials, error) {
 
 func (s *Store) PutCredentials(name, description, expiresAt string, user bool, owner int64) (accessKey, secretKey string, err error) {
 	return s.putCredentials(name, description, expiresAt, user, owner)
+}
+
+func (s *Store) ForceCredentials(accessKey, secretKey string, owner int64) error {
+	return s.forceCredentials(accessKey, secretKey, owner)
 }
 
 func (s *Store) DeleteCredentials(accessKey string) error {

@@ -63,6 +63,20 @@ func (s *Store) putCredentials(name, description, expiresAt string, user bool, o
 	return accessKey, secretKey, nil
 }
 
+func (s *Store) forceCredentials(accessKey, secretKey string, owner int64) error {
+	encryptedSecret, err := utils.Encrypt(secretKey)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.db.Exec(`INSERT INTO credentials (access_key, secret_key_encrypted, user, expires_at, name, description, owner) VALUES (?, ?, ?, ?, ?, ?, ?)`, accessKey, encryptedSecret, true, nil, "Test", "Test", owner)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *Store) deleteCredentials(accessKey string) error {
 	_, err := s.db.Exec(`DELETE FROM credentials WHERE access_key = ?`, accessKey)
 	return err
