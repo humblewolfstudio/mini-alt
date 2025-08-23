@@ -8,7 +8,7 @@ import (
 	"mini-alt/utils"
 )
 
-func (s *Storage) putObject(bucket, objectKey string, body io.Reader, metadata types.Metadata, owner int64) (string, utils.Error) {
+func (s *Storage) putObject(bucket, objectKey string, body io.Reader, metadata types.Metadata) (string, utils.Error) {
 	_, err := s.store.GetBucket(bucket)
 	if err != nil {
 		return "", utils.NoSuchBucket
