@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"mini-alt/storage/db"
+	"os"
 )
 
 //goland:noinspection ALL
@@ -10,7 +11,8 @@ func LoadTestCredentials(store *db.Store) {
 		return
 	}
 
-	accessKey, secretKey := "zAYWfUfum6mKhLbK", "mNcRRjk4Uy9eFnzIUHANbnRtnKQsFi2I"
+	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
+	secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
 
 	newId, err := store.RegisterUser("test", "test", accessKey, "", true)
 	if err != nil {
