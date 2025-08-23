@@ -9,16 +9,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/joho/godotenv"
 	"io"
-	"log"
 	"mini-alt/utils"
 	"os"
 	"strings"
 	"testing"
 )
 
-func createTestClient() *s3.S3 {
+func init() {
 	loadEnv()
+}
 
+func createTestClient() *s3.S3 {
 	cfg := &aws.Config{
 		Region:           aws.String("us-east-1"),
 		Endpoint:         aws.String("http://localhost:9000"),
@@ -32,10 +33,7 @@ func createTestClient() *s3.S3 {
 
 func loadEnv() {
 	if os.Getenv("APP_ENV") != "production" {
-		err := godotenv.Load("../.env")
-		if err != nil {
-			log.Println("Warning: Error loading .env file - relying on system environment variables")
-		}
+		_ = godotenv.Load("../.env")
 	}
 }
 
