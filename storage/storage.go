@@ -34,8 +34,8 @@ func (s *Storage) ListBuckets(owner int64) []models.Bucket {
 
 // ----------------- Objects -----------------
 
-func (s *Storage) PutObject(bucket, objectKey string, body io.Reader, metadata types.Metadata, owner int64) (string, utils.Error) {
-	return s.putObject(bucket, objectKey, body, metadata, owner)
+func (s *Storage) PutObject(bucket, objectKey string, body io.Reader, metadata types.Metadata) (string, utils.Error) {
+	return s.putObject(bucket, objectKey, body, metadata)
 }
 
 func (s *Storage) DeleteObject(bucket, objectKey string) (bool, utils.Error) {

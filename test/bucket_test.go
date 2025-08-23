@@ -81,7 +81,6 @@ func TestDeleteBucketNotExists(t *testing.T) {
 func TestDeleteBucketNotEmpty(t *testing.T) {
 	s3Client := createTestClient()
 	bucket := createTempBucket(t, s3Client)
-	println(bucket)
 	defer deleteTempBucket(t, s3Client, bucket)
 
 	_, _ = s3Client.PutObject(&s3.PutObjectInput{

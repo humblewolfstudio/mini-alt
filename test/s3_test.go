@@ -99,7 +99,9 @@ func TestPutAndGetObjectSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetObject failed: %v", err)
 	}
-	defer result.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(result.Body)
 
 	buf := new(bytes.Buffer)
 	_, err = io.Copy(buf, result.Body)

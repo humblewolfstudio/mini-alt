@@ -63,12 +63,6 @@ func BindPutObjectRequest(c *gin.Context) *PutObjectRequest {
 // PutObject receives the bucket name, the object key and the object and persists it.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
 func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
-	user, ok := GetUserFromContext(c)
-	if !ok {
-		utils.HandleError(c, utils.InternalServerError, "Could not get user from context")
-		return
-	}
-
 	putObjectRequest := BindPutObjectRequest(c)
 
 	if c.Request.MultipartForm != nil {
@@ -107,7 +101,7 @@ func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 		}
 	}
 
-	etag, e := h.Storage.PutObject(bucket, objectKey, c.Request.Body, putObjectRequest.ToMetadata(), user.Id)
+	etag, e := h.Storage.PutObject(bucket, objectKey, c.Request.Body, putObjectRequest.ToMetadata())
 	if e != "" {
 		utils.HandleError(c, e, bucket)
 		return
