@@ -26,6 +26,11 @@ func respondS3Error(c *gin.Context, code, message string) {
 
 func APIAuthenticationMiddleware(h *api.Handler) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if val, ok := c.Get("presignedAuth"); ok && val == true {
+			c.Next()
+			return
+		}
+
 		authHeader := c.GetHeader("Authorization")
 		dateHeader := c.GetHeader("x-amz-date")
 		payloadHash := c.GetHeader("x-amz-content-sha256")
@@ -58,6 +63,7 @@ func APIAuthenticationMiddleware(h *api.Handler) gin.HandlerFunc {
 			return
 		}
 
+		c.Set("accessKey", parsedAuth.AccessKeyID)
 		c.Next()
 	}
 }
