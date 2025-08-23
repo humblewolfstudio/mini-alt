@@ -27,6 +27,11 @@ func (h *Handler) CopyObject(c *gin.Context, dstBucket, objectKey, copySource st
 		return
 	}
 
+	if srcObjectKey == dstObjectKey && srcBucket == dstBucket {
+		utils.HandleError(c, utils.InvalidDestinationKey, srcBucket)
+		return
+	}
+
 	object, errMsg := h.Storage.CopyObject(srcBucket, srcObjectKey, dstBucket, dstObjectKey)
 	if errMsg != "" {
 		utils.HandleError(c, errMsg, dstBucket)

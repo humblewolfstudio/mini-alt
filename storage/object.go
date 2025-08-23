@@ -11,10 +11,7 @@ import (
 func (s *Storage) putObject(bucket, objectKey string, body io.Reader, metadata types.Metadata, owner int64) (string, utils.Error) {
 	_, err := s.store.GetBucket(bucket)
 	if err != nil {
-		err = s.store.PutBucket(bucket, owner)
-		if err != nil {
-			return "", utils.NoSuchBucket
-		}
+		return "", utils.NoSuchBucket
 	}
 
 	written, err := disk.PutObject(bucket, objectKey, body)

@@ -97,3 +97,11 @@ func TestDeleteBucketNotEmpty(t *testing.T) {
 		t.Errorf("expected error deleting non-empty bucket, got nil")
 	}
 }
+
+func TestListBuckets(t *testing.T) {
+	s3Client := createTestClient()
+	_, err := s3Client.ListBuckets(&s3.ListBucketsInput{})
+	if err != nil {
+		t.Fatalf("ListBuckets failed: %v", err)
+	}
+}
