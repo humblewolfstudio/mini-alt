@@ -24,13 +24,19 @@ import (
 //go:embed frontend/dist/*
 var embeddedFiles embed.FS
 
+// TODO add test flag that initializes the database with a test user (admin) and a test credentials that are always the same. This way, we can test it in the cloud
 func main() {
 	loadInitialData := flag.Bool("load-initial-data", false, "Load initial data")
+	testData := flag.Bool("test", false, "Initializes the app with a test user/access key")
 	flag.Parse()
 
 	loadEnv()
 	store := startDatabase()
 	crons.StartupCronJobs(store)
+
+	if *testData {
+		jobs.LoadTestCredentials(store)
+	}
 
 	if *loadInitialData {
 		jobs.LoadInitialData(store)

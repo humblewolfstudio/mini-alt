@@ -7,11 +7,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/joho/godotenv"
 	"io"
 	"mini-alt/utils"
+	"os"
 	"strings"
 	"testing"
 )
+
+func init() {
+	loadEnv()
+}
 
 func createTestClient() *s3.S3 {
 	cfg := &aws.Config{
@@ -19,13 +25,16 @@ func createTestClient() *s3.S3 {
 		Endpoint:         aws.String("http://localhost:9000"),
 		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
-		Credentials: credentials.NewStaticCredentials(
-			"0GNTGAiAxRywL5KI",
-			"zj9VXm1q9bE8n9OEsgglpqec9DBtkkZe",
-			""),
+		Credentials:      credentials.NewEnvCredentials(),
 	}
 	sess := session.Must(session.NewSession(cfg))
 	return s3.New(sess)
+}
+
+func loadEnv() {
+	if os.Getenv("APP_ENV") != "production" {
+		_ = godotenv.Load("../.env")
+	}
 }
 
 func createTempBucket(t *testing.T, s3Client *s3.S3) string {
