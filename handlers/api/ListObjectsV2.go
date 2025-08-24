@@ -18,7 +18,7 @@ const MaxObjects = 1000
 func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 	objects, err := h.Store.ListObjects(bucket)
 	if err != nil {
-		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchBucket", "The specified bucket does not exist.", bucket)
+		utils.HandleError(c, utils.NoSuchBucket, bucket)
 		return
 	}
 
@@ -118,7 +118,7 @@ func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 		xmlListBucketResult.Delimiter = delimiter
 	}
 
-	events.HandleEventObject(h.Store, types.EventGetPrefix, utils.ClearObjectKeyWithBucket(bucket, delimiter), utils.ClearBucketName(bucket), "")
+	events.HandleEventObject(h.Store, types.EventGetPrefix, utils.ClearObjectKeyWithBucket(bucket, delimiter), bucket, "")
 
 	c.XML(http.StatusOK, xmlListBucketResult)
 }

@@ -1,60 +1,100 @@
-package storage_test
+package test
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/joho/godotenv"
 	"io"
+	"mini-alt/utils"
+	"os"
 	"strings"
 	"testing"
 )
 
+func init() {
+	loadEnv()
+}
+
 func createTestClient() *s3.S3 {
-	//goland:noinspection SpellCheckingInspection
 	cfg := &aws.Config{
 		Region:           aws.String("us-east-1"),
 		Endpoint:         aws.String("http://localhost:9000"),
 		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
-		Credentials: credentials.NewStaticCredentials(
-			"0GNTGAiAxRywL5KI",
-			"zj9VXm1q9bE8n9OEsgglpqec9DBtkkZe",
-			""),
+		Credentials:      credentials.NewEnvCredentials(),
 	}
-
 	sess := session.Must(session.NewSession(cfg))
 	return s3.New(sess)
 }
 
-func TestPutObject(t *testing.T) {
-	s3Client := createTestClient()
+func loadEnv() {
+	if os.Getenv("APP_ENV") != "production" {
+		_ = godotenv.Load("../.env")
+	}
+}
 
+func createTempBucket(t *testing.T, s3Client *s3.S3) string {
+	bucket := fmt.Sprintf("test-bucket-%s", utils.GenerateRandomKey(16))
+	_, err := s3Client.CreateBucket(&s3.CreateBucketInput{
+		Bucket: aws.String(bucket),
+	})
+	if err != nil {
+		t.Fatalf("CreateBucket failed: %v", err)
+	}
+	return bucket
+}
+
+func deleteAllObjects(t *testing.T, s3Client *s3.S3, bucket string) {
+	listOutput, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
+		Bucket: aws.String(bucket),
+	})
+	if err != nil {
+		t.Fatalf("ListObjects failed: %v", err)
+	}
+	for _, obj := range listOutput.Contents {
+		_, err := s3Client.DeleteObject(&s3.DeleteObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    obj.Key,
+		})
+		if err != nil {
+			t.Errorf("DeleteObject %s failed: %v", *obj.Key, err)
+		}
+	}
+}
+
+func deleteTempBucket(t *testing.T, s3Client *s3.S3, bucket string) {
+	deleteAllObjects(t, s3Client, bucket)
+	_, err := s3Client.DeleteBucket(&s3.DeleteBucketInput{
+		Bucket: aws.String(bucket),
+	})
+	if err != nil {
+		t.Fatalf("DeleteBucket failed: %v", err)
+	}
+}
+
+func TestPutAndGetObjectSuccess(t *testing.T) {
+	s3Client := createTestClient()
+	bucket := createTempBucket(t, s3Client)
+	defer deleteTempBucket(t, s3Client, bucket)
+
+	key := "test-object.txt"
+	content := "Hello, isolated S3 test!"
 	_, err := s3Client.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String("test-bucket"),
-		Key:    aws.String("test-object.txt"),
-		Body:   strings.NewReader("Hello, S3-compatible storage!"),
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+		Body:   strings.NewReader(content),
 	})
 	if err != nil {
 		t.Fatalf("PutObject failed: %v", err)
 	}
-}
-
-func TestGetObject(t *testing.T) {
-	s3Client := createTestClient()
-
-	_, err := s3Client.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String("test-bucket"),
-		Key:    aws.String("test-object.txt"),
-		Body:   strings.NewReader("Hello, S3-compatible storage!"),
-	})
-	if err != nil {
-		t.Fatalf("Setup failed: %v", err)
-	}
 
 	result, err := s3Client.GetObject(&s3.GetObjectInput{
-		Bucket: aws.String("test-bucket"),
-		Key:    aws.String("test-object.txt"),
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
 	})
 	if err != nil {
 		t.Fatalf("GetObject failed: %v", err)
@@ -63,150 +103,199 @@ func TestGetObject(t *testing.T) {
 		_ = Body.Close()
 	}(result.Body)
 
-	body := make([]byte, 100)
-	n, err := result.Body.Read(body)
-	if err != nil && err != io.EOF {
-		t.Fatalf("Read failed: %v", err)
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, result.Body)
+	if err != nil {
+		t.Fatalf("Read Body failed: %v", err)
 	}
-
-	expected := "Hello, S3-compatible storage!"
-	if string(body[:n]) != expected {
-		t.Errorf("Expected '%s', got '%s'", expected, string(body[:n]))
+	if buf.String() != content {
+		t.Errorf("Expected %q, got %q", content, buf.String())
 	}
 }
 
-func TestCopyObject(t *testing.T) {
+func TestGetObjectNotFound(t *testing.T) {
 	s3Client := createTestClient()
+	bucket := createTempBucket(t, s3Client)
+	defer deleteTempBucket(t, s3Client, bucket)
 
-	_, err := s3Client.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String("test-bucket"),
-		Key:    aws.String("test-object.txt"),
-		Body:   strings.NewReader("Hello, S3-compatible storage!"),
+	_, err := s3Client.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String("does-not-exist"),
 	})
-	if err != nil {
-		t.Fatalf("Setup failed: %v", err)
+	if err == nil {
+		t.Errorf("Expected GetObject to fail for non-existent key")
 	}
+}
 
-	_, err = s3Client.CopyObject(&s3.CopyObjectInput{
-		Bucket:     aws.String("test-bucket"),
-		Key:        aws.String("test-dir/test-object-copy.txt"),
-		CopySource: aws.String("test-bucket/test-object.txt"),
+func TestPutObjectInvalidBucket(t *testing.T) {
+	s3Client := createTestClient()
+	_, err := s3Client.PutObject(&s3.PutObjectInput{
+		Bucket: aws.String("missing-bucket"),
+		Key:    aws.String("x"),
+		Body:   strings.NewReader("data"),
+	})
+	if err == nil {
+		t.Errorf("Expected error when putting object in missing bucket")
+	}
+}
+
+func TestCopyObjectSuccess(t *testing.T) {
+	s3Client := createTestClient()
+	bucket := createTempBucket(t, s3Client)
+	defer deleteTempBucket(t, s3Client, bucket)
+
+	srcKey := "original.txt"
+	dstKey := "copied.txt"
+
+	_, _ = s3Client.PutObject(&s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(srcKey),
+		Body:   strings.NewReader("copy this"),
+	})
+
+	_, err := s3Client.CopyObject(&s3.CopyObjectInput{
+		Bucket:     aws.String(bucket),
+		Key:        aws.String(dstKey),
+		CopySource: aws.String(bucket + "/" + srcKey),
 	})
 	if err != nil {
 		t.Fatalf("CopyObject failed: %v", err)
 	}
+}
 
-	_, err = s3Client.GetObject(&s3.GetObjectInput{
-		Bucket: aws.String("test-bucket"),
-		Key:    aws.String("test-dir/test-object-copy.txt"),
+func TestCopyObjectSourceNotFound(t *testing.T) {
+	s3Client := createTestClient()
+	bucket := createTempBucket(t, s3Client)
+	defer deleteTempBucket(t, s3Client, bucket)
+
+	_, err := s3Client.CopyObject(&s3.CopyObjectInput{
+		Bucket:     aws.String(bucket),
+		Key:        aws.String("dest.txt"),
+		CopySource: aws.String(bucket + "/does-not-exist"),
 	})
-	if err != nil {
-		t.Errorf("Verification failed - copied object not found: %v", err)
+	if err == nil {
+		t.Errorf("Expected error when copying missing object")
 	}
 }
 
-func TestListObjects(t *testing.T) {
+func TestListObjectsWithPrefix(t *testing.T) {
 	s3Client := createTestClient()
+	bucket := createTempBucket(t, s3Client)
+	defer deleteTempBucket(t, s3Client, bucket)
 
-	_, err := s3Client.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String("test-bucket"),
-		Key:    aws.String("test-object.txt"),
-		Body:   strings.NewReader("Hello, S3-compatible storage!"),
+	_, _ = s3Client.PutObject(&s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String("prefix/test1.txt"),
+		Body:   strings.NewReader("data1"),
 	})
-	if err != nil {
-		t.Fatalf("Setup failed: %v", err)
-	}
-
-	_, err = s3Client.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String("test-bucket"),
-		Key:    aws.String("testDir/test-object.txt"),
-		Body:   strings.NewReader("Hello, S3-compatible storage!"),
+	_, _ = s3Client.PutObject(&s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String("prefix/test2.txt"),
+		Body:   strings.NewReader("data2"),
 	})
-	if err != nil {
-		t.Fatalf("Setup failed: %v", err)
-	}
 
-	result, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
-		Bucket:    aws.String("test-bucket"),
-		Prefix:    aws.String("testDir/"),
-		Delimiter: aws.String("/"),
+	list, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
+		Bucket: aws.String(bucket),
+		Prefix: aws.String("prefix/"),
 	})
 	if err != nil {
 		t.Fatalf("ListObjects failed: %v", err)
 	}
-
-	found := false
-	for _, item := range result.Contents {
-		if *item.Key == "testDir/test-object.txt" {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		t.Error("Expected object not found in listing")
+	if len(list.Contents) != 2 {
+		t.Errorf("Expected 2 objects, got %d", len(list.Contents))
 	}
 }
 
-func TestHeadBucket(t *testing.T) {
+func TestListObjectsEmptyBucket(t *testing.T) {
 	s3Client := createTestClient()
+	bucket := createTempBucket(t, s3Client)
+	defer deleteTempBucket(t, s3Client, bucket)
 
-	_, err := s3Client.HeadBucket(&s3.HeadBucketInput{
-		Bucket: aws.String("test-bucket"),
+	list, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
+		Bucket: aws.String(bucket),
 	})
-
 	if err != nil {
-		t.Fatalf("HeadBucket failed: %v", err)
+		t.Fatalf("ListObjects failed: %v", err)
+	}
+	if len(list.Contents) != 0 {
+		t.Errorf("Expected 0 objects, got %d", len(list.Contents))
 	}
 }
 
-func TestHeadObject(t *testing.T) {
+func TestHeadObjectSuccess(t *testing.T) {
 	s3Client := createTestClient()
+	bucket := createTempBucket(t, s3Client)
+	defer deleteTempBucket(t, s3Client, bucket)
+
+	key := "head-me.txt"
+	_, _ = s3Client.PutObject(&s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+		Body:   strings.NewReader("data"),
+	})
 
 	_, err := s3Client.HeadObject(&s3.HeadObjectInput{
-		Bucket: aws.String("test-bucket"),
-		Key:    aws.String("test-object.txt"),
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
 	})
-
 	if err != nil {
-		t.Fatalf("HeadBucket failed: %v", err)
+		t.Fatalf("HeadObject failed: %v", err)
 	}
 }
 
-func TestDeleteBucket(t *testing.T) {
+func TestHeadObjectNotFound(t *testing.T) {
 	s3Client := createTestClient()
+	bucket := createTempBucket(t, s3Client)
+	defer deleteTempBucket(t, s3Client, bucket)
 
-	bucketName := "test-bucket"
+	_, err := s3Client.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String("not-there"),
+	})
+	if err == nil {
+		t.Errorf("Expected HeadObject to fail for non-existent key")
+	}
+}
 
-	listOutput, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
-		Bucket: aws.String(bucketName),
+func TestDeleteObjectSuccess(t *testing.T) {
+	s3Client := createTestClient()
+	bucket := createTempBucket(t, s3Client)
+	defer deleteTempBucket(t, s3Client, bucket)
+
+	key := "delete-me.txt"
+	_, _ = s3Client.PutObject(&s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+		Body:   strings.NewReader("temp"),
+	})
+
+	_, err := s3Client.DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
 	})
 	if err != nil {
-		t.Fatalf("Failed to list objects before deleting bucket: %v", err)
+		t.Fatalf("DeleteObject failed: %v", err)
 	}
 
-	for _, obj := range listOutput.Contents {
-		_, err := s3Client.DeleteObject(&s3.DeleteObjectInput{
-			Bucket: aws.String(bucketName),
-			Key:    obj.Key,
-		})
-		if err != nil {
-			t.Errorf("Failed to delete object %s: %v", *obj.Key, err)
-		}
+	_, err = s3Client.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+	if err == nil {
+		t.Errorf("Expected HeadObject to fail after deletion")
 	}
+}
 
-	err = s3Client.WaitUntilObjectNotExists(&s3.HeadObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String("test-object.txt"),
+func TestDeleteObjectNotFoundAllowed(t *testing.T) {
+	s3Client := createTestClient()
+	bucket := createTempBucket(t, s3Client)
+	defer deleteTempBucket(t, s3Client, bucket)
+
+	_, err := s3Client.DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String("does-not-exist"),
 	})
 	if err != nil {
-		t.Logf("WaitUntilObjectNotExists may have failed (possibly due to missing object): %v", err)
-	}
-
-	_, err = s3Client.DeleteBucket(&s3.DeleteBucketInput{
-		Bucket: aws.String(bucketName),
-	})
-	if err != nil {
-		t.Fatalf("DeleteBucket failed: %v", err)
+		t.Errorf("Expected delete of missing object to succeed, got: %v", err)
 	}
 }

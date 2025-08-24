@@ -11,16 +11,14 @@ import (
 // HeadBucket returns if a buckets exists.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadBucket.html
 func (h *Handler) HeadBucket(c *gin.Context) {
-	bucketName := c.Param("bucket")
-
-	_, err := h.Store.GetBucket(bucketName)
-	if err != nil {
-		println(err.Error())
-		utils.RespondS3Error(c, http.StatusNotFound, "NoSuchBucket", err.Error(), bucketName)
+	bucket := utils.ClearInput(c.Param("bucket"))
+	ok, e := h.Storage.HeadBucket(bucket)
+	if !ok {
+		utils.HandleError(c, e, bucket)
 		return
 	}
 
-	go events.HandleEventBucket(h.Store, types.EventHead, utils.ClearBucketName(bucketName), "")
+	go events.HandleEventBucket(h.Store, types.EventHead, bucket, "")
 
 	c.Status(http.StatusOK)
 }

@@ -14,7 +14,8 @@ const toggleCollapse = () => {
 
 const adminRoutes = [
   {path: '/users', name: 'Users', icon: 'users'},
-  {path: '/events', name: 'Events', icon: 'events'}
+  {path: '/events', name: 'Events', icon: 'events'},
+  {path: '/metrics', name: 'Metrics', icon: 'metrics'}
 ];
 
 const userRoutes = [

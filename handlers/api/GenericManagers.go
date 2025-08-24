@@ -2,59 +2,55 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"mini-alt/utils"
 )
 
 // GetObjectOrList receives the endpoint of getting an object or listing bucket objects (due to gin problem with * endpoints).
 func (h *Handler) GetObjectOrList(c *gin.Context) {
-	bucket := c.Param("bucket")
-	object := c.Param("object")
+	bucket := utils.ClearInput(c.Param("bucket"))
+	objectKey := utils.ClearInput(c.Param("object"))
 
-	if object == "/" || object == "" {
+	if objectKey == "/" || objectKey == "" {
 		h.ListObjectsV2(c, bucket)
-		return
+	} else {
+		h.GetObject(c, bucket, objectKey)
 	}
-
-	h.GetObject(c, bucket, object)
 }
 
 // PutObjectOrBucket receives the endpoint of creating an object or a bucket (due to gin problem with * endpoints).
 func (h *Handler) PutObjectOrBucket(c *gin.Context) {
-	bucket := c.Param("bucket")
-	object := c.Param("object")
+	bucket := utils.ClearInput(c.Param("bucket"))
+	objectKey := utils.ClearInput(c.Param("object"))
 
-	if copySource := c.GetHeader("x-amz-copy-source"); copySource != "" {
-		h.CopyObject(c, bucket, object, copySource)
-		return
+	if copySource := utils.ClearInput(c.GetHeader("x-amz-copy-source")); copySource != "" {
+		h.CopyObject(c, bucket, objectKey, copySource)
+	} else if objectKey == "/" || objectKey == "" {
+		h.PutBucket(c, bucket)
+	} else {
+		h.PutObject(c, bucket, objectKey)
 	}
-
-	if object == "/" || object == "" {
-		h.CreateBucket(c, bucket)
-		return
-	}
-
-	h.PutObject(c, bucket, object)
 }
 
 // DeleteObjectOrBucket receives the endpoint of deleting an object or a bucket (due to gin problem with * endpoints).
 func (h *Handler) DeleteObjectOrBucket(c *gin.Context) {
-	object := c.Param("object")
+	bucket := utils.ClearInput(c.Param("bucket"))
+	objectKey := utils.ClearInput(c.Param("object"))
 
-	if object == "/" || object == "" {
+	if objectKey == "/" || objectKey == "" {
 		h.DeleteBucket(c)
-		return
+	} else {
+		h.DeleteObject(c, bucket, objectKey)
 	}
-
-	h.DeleteObject(c)
 }
 
 // HeadObjectOrBucket receives the endpoint of returning the metadata of an object or a bucket.
 func (h *Handler) HeadObjectOrBucket(c *gin.Context) {
-	object := c.Param("object")
+	bucket := utils.ClearInput(c.Param("bucket"))
+	objectKey := utils.ClearInput(c.Param("object"))
 
-	if object == "/" || object == "" {
+	if objectKey == "/" || objectKey == "" {
 		h.HeadBucket(c)
-		return
+	} else {
+		h.HeadObject(c, bucket, objectKey)
 	}
-
-	h.HeadObject(c)
 }
