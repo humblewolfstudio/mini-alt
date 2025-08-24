@@ -29,9 +29,6 @@
           <div class="capacity-value">
             {{ formatSize(specs?.UsedCapacity) }}
           </div>
-          <div class="capacity-sub">
-            {{ usagePercentDisplay }}% of {{ formatSize(specs?.TotalCapacity) }}
-          </div>
         </div>
 
         <div class="divider"></div>
@@ -40,9 +37,6 @@
           <div class="capacity-label">Available Capacity</div>
           <div class="capacity-value">
             {{ formatSize(specs?.FreeCapacity) }}
-          </div>
-          <div class="capacity-sub">
-            {{ freePercentDisplay }}% of {{ formatSize(specs?.TotalCapacity) }}
           </div>
         </div>
       </div>
