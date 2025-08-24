@@ -50,6 +50,6 @@ func (s *Storage) CopyObject(srcBucket, srcKey, dstBucket, dstKey string) (*mode
 	return s.copyObject(srcBucket, srcKey, dstBucket, dstKey)
 }
 
-func (s *Storage) GetObjectPath(bucket, objectKey string) (string, utils.Error) {
-	return s.getObjectPath(bucket, objectKey)
+func (s *Storage) GetObject(bucket, objectKey string) (string, *models.Object, utils.Error) {
+	return s.getObject(bucket, objectKey)
 }

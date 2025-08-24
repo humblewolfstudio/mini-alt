@@ -91,11 +91,16 @@ func (s *Storage) copyObject(srcBucket, srcKey, dstBucket, dstKey string) (*mode
 	return &object, ""
 }
 
-func (s *Storage) getObjectPath(bucket, objectKey string) (string, utils.Error) {
-	path, err := disk.GetSafeObjectPath(bucket, objectKey)
+func (s *Storage) getObject(bucket, objectKey string) (string, *models.Object, utils.Error) {
+	object, err := s.store.GetObject(bucket, objectKey)
 	if err != nil {
-		return "", utils.NoSuchKey
+		return "", nil, utils.NoSuchKey
 	}
 
-	return path, ""
+	path, err := disk.GetSafeObjectPath(bucket, objectKey)
+	if err != nil {
+		return "", nil, utils.NoSuchKey
+	}
+
+	return path, &object, ""
 }

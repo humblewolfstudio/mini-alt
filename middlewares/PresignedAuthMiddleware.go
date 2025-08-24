@@ -73,6 +73,7 @@ func PresignedAuthMiddleware(h *api.Handler) gin.HandlerFunc {
 		}
 		c.Set("user", user)
 		c.Set("presignedAuth", true)
+		c.Set("accessKey", parsed.AccessKeyID)
 		c.Next()
 	}
 }

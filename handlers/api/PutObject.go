@@ -63,6 +63,13 @@ func BindPutObjectRequest(c *gin.Context) *PutObjectRequest {
 // PutObject receives the bucket name, the object key and the object and persists it.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
 func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
+	clientIp := utils.GetClientIP(c.Request)
+	accessKey := c.GetString("accessKey")
+	if accessKey == "" {
+		utils.HandleError(c, utils.InternalServerError, "Access key not found")
+		return
+	}
+
 	putObjectRequest := BindPutObjectRequest(c)
 
 	if c.Request.MultipartForm != nil {
@@ -107,7 +114,7 @@ func (h *Handler) PutObject(c *gin.Context, bucket, objectKey string) {
 		return
 	}
 
-	go events.HandleEventObject(h.Store, eventsTypes.EventPut, utils.ClearObjectKeyWithBucket(bucket, objectKey), utils.ClearInput(bucket), "")
+	go events.HandleEventObject(h.Store, eventsTypes.EventPut, utils.ClearInput(bucket), utils.ClearInput(objectKey), etag, putObjectRequest.ContentLength, accessKey, clientIp)
 
 	c.Header("ETag", etag)
 	c.Status(http.StatusOK)

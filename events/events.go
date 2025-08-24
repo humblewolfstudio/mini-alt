@@ -5,7 +5,12 @@ import (
 	"mini-alt/storage/db"
 )
 
-func HandleEventObject(db *db.Store, eventName types.EventName, key, bucket string, accessKey string) {
+const EventVersion = "0.1"
+const EventSource = "minialt:s3"
+const S3SchemaVersion = "1.0"
+const ConfigurationId = "Config"
+
+func handleEventObject(db *db.Store, evt *types.Event) {
 	events, err := db.ListEvents()
 	if err != nil {
 		println("Error handling event: ", err.Error())
@@ -20,23 +25,15 @@ func HandleEventObject(db *db.Store, eventName types.EventName, key, bucket stri
 			return
 		}
 
-		if eventBucket.Name != bucket {
+		if eventBucket.Name != evt.Records[0].S3.Bucket.Name {
 			continue
 		}
 
-		evt := types.ObjectEvent{
-			Event: types.Event{
-				EventName: eventName,
-				AccessKey: accessKey,
-			},
-			Key: key,
-		}
-
-		Pool.Submit(WebhookJob{Event: evt, Link: event.Endpoint, Token: event.Token})
+		Pool.Submit(WebhookJob{Event: evt, Url: event.Endpoint, Token: event.Token})
 	}
 }
 
-func HandleEventBucket(db *db.Store, eventName types.EventName, bucket string, accessKey string) {
+func handleEventGlobal(db *db.Store, evt *types.Event) {
 	events, err := db.ListEvents()
 	if err != nil {
 		println("Error handling event: ", err.Error())
@@ -48,14 +45,6 @@ func HandleEventBucket(db *db.Store, eventName types.EventName, bucket string, a
 			continue
 		}
 
-		evt := types.GlobalEvent{
-			Event: types.Event{
-				EventName: eventName,
-				AccessKey: accessKey,
-			},
-			Bucket: bucket,
-		}
-
-		Pool.Submit(WebhookJob{Event: evt, Link: event.Endpoint, Token: event.Token})
+		Pool.Submit(WebhookJob{Event: evt, Url: event.Endpoint, Token: event.Token})
 	}
 }

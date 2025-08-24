@@ -11,6 +11,13 @@ import (
 // HeadBucket returns if a buckets exists.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadBucket.html
 func (h *Handler) HeadBucket(c *gin.Context) {
+	clientIp := utils.GetClientIP(c.Request)
+	accessKey := c.GetString("accessKey")
+	if accessKey == "" {
+		utils.HandleError(c, utils.InternalServerError, "Access key not found")
+		return
+	}
+
 	bucket := utils.ClearInput(c.Param("bucket"))
 	ok, e := h.Storage.HeadBucket(bucket)
 	if !ok {
@@ -18,7 +25,7 @@ func (h *Handler) HeadBucket(c *gin.Context) {
 		return
 	}
 
-	go events.HandleEventBucket(h.Store, types.EventHead, bucket, "")
+	go events.HandleEventBucket(h.Store, types.EventHead, bucket, accessKey, clientIp)
 
 	c.Status(http.StatusOK)
 }

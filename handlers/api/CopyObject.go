@@ -12,9 +12,16 @@ import (
 	"strings"
 )
 
-// CopyObject
-// TODO clean and add description
+// CopyObject copies the object given a source bucket and key and a destination bucket and key
+// AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html
 func (h *Handler) CopyObject(c *gin.Context, dstBucket, objectKey, copySource string) {
+	clientIp := utils.GetClientIP(c.Request)
+	accessKey := c.GetString("accessKey")
+	if accessKey == "" {
+		utils.HandleError(c, utils.InternalServerError, "Access key not found")
+		return
+	}
+
 	srcBucket, srcObjectKey, err := parseCopySource(copySource)
 	if err != nil {
 		utils.HandleError(c, utils.InvalidSourceKey, srcBucket)
@@ -38,7 +45,7 @@ func (h *Handler) CopyObject(c *gin.Context, dstBucket, objectKey, copySource st
 		return
 	}
 
-	h.handleCopyEvents(srcBucket, srcObjectKey, dstBucket, dstObjectKey)
+	go events.HandleEventObjectCopy(h.Store, types.EventCopy, utils.ClearInput(srcBucket), utils.ClearInput(srcObjectKey), utils.ClearInput(dstBucket), utils.ClearInput(dstObjectKey), object.ETag, object.Size, accessKey, clientIp)
 
 	c.XML(http.StatusOK, encoding.CopyObjectResult{
 		LastModified: object.LastModified,
@@ -74,12 +81,4 @@ func decodeObjectKey(objectKey string) (string, error) {
 		return "", fmt.Errorf("invalid object key encoding")
 	}
 	return decoded, nil
-}
-
-func (h *Handler) handleCopyEvents(srcBucket, srcKey, dstBucket, dstKey string) {
-	srcEventKey := utils.ClearObjectKeyWithBucket(srcBucket, srcKey)
-	dstEventKey := utils.ClearObjectKeyWithBucket(dstBucket, dstKey)
-
-	go events.HandleEventObject(h.Store, types.EventCopy, srcEventKey, srcBucket, "")
-	go events.HandleEventObject(h.Store, types.EventCopied, dstEventKey, dstBucket, "")
 }

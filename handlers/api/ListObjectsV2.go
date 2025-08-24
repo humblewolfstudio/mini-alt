@@ -5,6 +5,7 @@ import (
 	"mini-alt/encoding"
 	"mini-alt/events"
 	"mini-alt/events/types"
+	"mini-alt/models"
 	"mini-alt/utils"
 	"net/http"
 	"strconv"
@@ -16,6 +17,13 @@ const MaxObjects = 1000
 // ListObjectsV2 returns a list of x objects in a bucket.
 // AWS Documentation: https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html
 func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
+	clientIp := utils.GetClientIP(c.Request)
+	accessKey := c.GetString("accessKey")
+	if accessKey == "" {
+		utils.HandleError(c, utils.InternalServerError, "Access key not found")
+		return
+	}
+
 	objects, err := h.Store.ListObjects(bucket)
 	if err != nil {
 		utils.HandleError(c, utils.NoSuchBucket, bucket)
@@ -64,6 +72,8 @@ func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 	foundStartAfter := startAfter == ""
 	seenPrefixes := make(map[string]bool)
 
+	objectList := make([]models.Object, 0)
+
 	for _, object := range objects {
 		if !foundStartAfter {
 			if object.Key == startAfter {
@@ -106,6 +116,7 @@ func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 			LastModified: object.LastModified,
 			Size:         object.Size,
 		})
+		objectList = append(objectList, object)
 		keyCount++
 	}
 
@@ -118,7 +129,7 @@ func (h *Handler) ListObjectsV2(c *gin.Context, bucket string) {
 		xmlListBucketResult.Delimiter = delimiter
 	}
 
-	events.HandleEventObject(h.Store, types.EventGetPrefix, utils.ClearObjectKeyWithBucket(bucket, delimiter), bucket, "")
+	events.HandleEventObjectList(h.Store, types.EventGetPrefix, utils.ClearInput(bucket), utils.ClearInput(prefix), int64(maxKeys), objectList, accessKey, clientIp)
 
 	c.XML(http.StatusOK, xmlListBucketResult)
 }

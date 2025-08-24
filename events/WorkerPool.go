@@ -12,8 +12,8 @@ type WorkerPool struct {
 }
 
 type WebhookJob struct {
-	Event types.Eventer
-	Link  string
+	Event *types.Event
+	Url   string
 	Token string
 }
 
@@ -39,7 +39,7 @@ func (p *WorkerPool) worker(id int) {
 				}
 			}()
 
-			err := sendWebhook(job.Link, job.Token, job.Event)
+			err := sendWebhook(job.Url, job.Token, job.Event)
 			if err != nil {
 				log.Printf("[Worker %d] Failed to send webhook event to webhook server: %v", id, err)
 			}
