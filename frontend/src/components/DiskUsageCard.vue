@@ -57,11 +57,6 @@ const usagePercentDisplay = computed(() => {
   if (!props.specs) return 0;
   return ((props.specs.UsedCapacity / props.specs.TotalCapacity) * 100).toFixed(2);
 });
-
-const freePercentDisplay = computed(() => {
-  if (!props.specs) return 0;
-  return ((props.specs.FreeCapacity / props.specs.TotalCapacity) * 100).toFixed(2);
-});
 </script>
 
 <style scoped>
@@ -134,10 +129,6 @@ const freePercentDisplay = computed(() => {
   color: #42b983;
   font-size: 1.5rem;
   font-weight: bold;
-}
-
-.capacity-sub {
-  font-size: 0.85rem;
 }
 
 .divider {
